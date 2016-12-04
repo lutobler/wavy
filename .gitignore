@@ -1,0 +1,15 @@
+CMakeFiles/
+bin/
+tests/
+garbage/
+tags
+.gdb_history
+todo.org
+wavy
+libwaveform.so
+cmake_install.cmake
+CMakeCache.txt
+Makefile
+*.swp
+*.o
+*.a
