@@ -13,25 +13,22 @@
  * Utility functions that can be used by any module.
  */
 
-/*
- * Sets color values in a cairo_t object. This mixes up the fields, because
- * wlc and wavy's configuration use the RGBA format, while Cairo uses ARGB.
- */
+// Sets color values in a cairo_t object. This mixes up the fields, because
+// wlc and wavy's configuration use the RGBA format, while Cairo uses ARGB.
 void cr_set_argb_color(cairo_t *cr, uint32_t rgba);
 
-/*
- * Builds a char ** from a lua table.
- */
+// Builds a char ** from a lua table.
 const char **table_to_str_array(lua_State *L, int32_t index);
 
-/*
- * Takes a string and decides which hook it corresponds to.
- */
+// Takes a string and decides which hook it corresponds to.
 enum hook_t hook_str_to_enum(const char *str);
 
-/*
- * Takes a string and decides which layout it corresponds to.
- */
+// Takes a string and decides which layout it corresponds to.
 enum auto_tile_t tiling_layout_str_to_enum(const char *str);
+
+// A replacement for wlc_exec that launches a command in a shell.
+// This allows (for example) setting variables without explicitly launching
+// a shell.
+void cmd_exec(const char *bin, char *const *args);
 
 #endif

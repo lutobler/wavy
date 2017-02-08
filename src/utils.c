@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 #include <cairo/cairo.h>
 #include <lua.h>
 #include <lauxlib.h>
@@ -8,6 +9,7 @@
 
 #include "bar.h"
 #include "utils.h"
+#include "log.h"
 
 void cr_set_argb_color(cairo_t *cr, uint32_t rgba) {
     cairo_set_source_rgba(cr, (double) ((rgba >> 8)  & 0xff) / 255.0,
@@ -71,4 +73,35 @@ enum auto_tile_t tiling_layout_str_to_enum(const char *str) {
     }
 
     return tile;
+}
+
+// adapted from wlc_exec, supposed to be drop-in replacement
+void cmd_exec(const char *bin, char *const *args) {
+    (void) bin;
+    if (!args) {
+        return;
+    }
+
+    wavy_log(LOG_DEBUG, "Spawning \"%s\"", bin);
+
+    uint32_t len;
+    for (len = 0; args[len]; len++);
+    char **argv = malloc(sizeof(char *const) * (len + 3));
+    if (!argv) {
+        wavy_log(LOG_ERROR, "Failed to allocate memory for spawning commands");
+    }
+    memcpy(argv+2, args, len * sizeof(char *const *));
+    argv[0] = "/bin/sh";
+    argv[1] = "-c";
+    argv[len+2] = NULL;
+
+    pid_t p;
+    if ((p = fork()) == 0) {
+        setsid();
+        execvp("/bin/sh", (char *const *) argv);
+        _exit(EXIT_FAILURE);
+    } else if (p < 0) {
+        wavy_log(LOG_ERROR, "Failed to fork for \'%s\'", bin);
+    }
+    free(argv);
 }

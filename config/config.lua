@@ -72,7 +72,7 @@ qt_wl = "QT_QPA_PLATFORM=wayland-egl "
 qt_dec = "QT_WAYLAND_DISABLE_WINDOWDECORATION=\"1\" "
 
 -- using a shell so env variables work
-qb = {"/bin/sh", "-c", qt_wl .. qt_dec .. "qutebrowser", "--backend", "webengine"}
+qb = {qt_wl .. qt_dec .. "qutebrowser", "--backend", "webengine"}
 dmenu = {"dmenu_run", "-b", "-fn", "Terminess Powerline-12:Regular", "-p", ">>>"}
 
 -- application shortcuts

@@ -8,6 +8,7 @@
 #include "commands.h"
 #include "layout.h"
 #include "log.h"
+#include "utils.h"
 
 /*
  * A *_cmd function will be called (via a pointer to it in the keybind_t struct)
@@ -33,8 +34,7 @@ bool exit_cmd(struct keybind_t *kb, wlc_handle view) {
 bool spawn_cmd(struct keybind_t *kb, wlc_handle view) {
     (void) view;
     char *const *str_arr = (char *const *) kb->args.ptr;
-    wlc_exec(str_arr[0], str_arr);
-    wavy_log(LOG_DEBUG, "Spawning \"%s\"", str_arr[0]);
+    cmd_exec(str_arr[0], str_arr);
     return true;
 }
 

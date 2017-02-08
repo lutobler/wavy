@@ -10,6 +10,7 @@
 #include "layout.h"
 #include "bar.h"
 #include "wallpaper.h"
+#include "utils.h"
 
 /*
  * Return true if window should be managed by wavy and false otherwise (for
@@ -137,7 +138,7 @@ static void compositor_ready() {
     // run autostart programs
     for (uint32_t i = 0; i < config->autostart->length; i++) {
         char *const *str_arr = (char *const *) config->autostart->items[i];
-        wlc_exec(str_arr[0], str_arr);
+        cmd_exec(str_arr[0], str_arr);
     }
 }
 
