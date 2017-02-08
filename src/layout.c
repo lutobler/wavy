@@ -644,8 +644,8 @@ void frame_redraw(struct frame *fr, bool realloc) {
 void frame_add(enum direction_t s) {
     struct frame *fr = get_active_frame();
 
-    // Allocate new left leaf. We don't use alloc_frame because we memcpy the
-    // old one to this.
+    // Allocate new left leaf. We don't use alloc_frame because we copy the
+    // previous frame to this.
     struct frame *new_left = calloc(sizeof(struct frame), 1);
     if (!new_left) {
         wavy_log(LOG_ERROR, "Failed to allocate new frame");
@@ -653,7 +653,7 @@ void frame_add(enum direction_t s) {
     }
 
     // copy fr over to the new left leaf
-    memcpy(new_left, fr, sizeof(struct frame));
+    *new_left = *fr;
     new_left->parent = fr;
 
     // these are used to initialize the new right child
@@ -855,7 +855,7 @@ void frame_delete() {
         brother->rel_size = fr->parent->rel_size;
         brother->parent = fr->parent->parent;
 
-        memcpy(fr->parent, brother, sizeof(struct frame));
+        *fr->parent = *brother;
         active_output->active_ws->active_frame = fr->parent;
         wlc_output_schedule_render(active_output->output_handle);
 
@@ -893,7 +893,7 @@ void frame_delete() {
         brother->left->parent = fr->parent;
         brother->right->parent = fr->parent;
 
-        memcpy(fr->parent, brother, sizeof(struct frame));
+        *fr->parent = *brother;
         active_output->active_ws->active_frame = new_leaf;
         frame_recalc_geometries(fr->parent, fr->parent->border.g);
         wlc_output_schedule_render(active_output->output_handle);
