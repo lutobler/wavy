@@ -157,7 +157,7 @@ void frame_delete();
 
 // Called when a new child appears in wlc. Adds the new view to the currently
 // active frame.
-void child_add(wlc_handle view);
+bool child_add(wlc_handle view);
 
 // Called when a child is deleted. Removes the view from the currently active
 // frame and focuses the next view.

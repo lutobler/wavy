@@ -507,7 +507,6 @@ void frame_redraw(struct frame *fr, bool realloc) {
         uint32_t h_div = fr_g.size.h / fr->children->length;
 
         struct wlc_geometry g;
-        /* struct wlc_geometry g_rel; */
         for (uint32_t i = 0; i < fr->children->length; i++) {
             wlc_handle v = frame_get_view_i(fr, i);
             g.origin.x = fr_g.origin.x;
@@ -934,11 +933,8 @@ static struct frame *_frame_by_view(struct frame *fr, wlc_handle view) {
     struct frame *fr_left = _frame_by_view(fr->left, view);
     struct frame *fr_right = _frame_by_view(fr->right, view);
 
-    if (fr_left) {
-        return fr_left;
-    } else {
-        return fr_right;
-    }
+    // a view is never in two frame at once
+    return fr_left ? fr_left : fr_right;
 }
 
 struct frame *frame_by_view(wlc_handle view) {
@@ -978,11 +974,15 @@ struct output *get_output_by_handle(wlc_handle view) {
     return NULL;
 }
 
-void child_add(wlc_handle view) {
+bool child_add(wlc_handle view) {
     struct frame *fr = get_active_frame();
 
-    // TODO handle error
     wlc_handle *view_ptr = malloc(sizeof(wlc_handle *));
+    if (!view_ptr) {
+        wavy_log(LOG_ERROR, "Failed to allocate memory for new view");
+        return false;
+    }
+
     *view_ptr = view;
 
     // insert the new view at the right place in the vector
@@ -996,6 +996,7 @@ void child_add(wlc_handle view) {
     fr->active_view = view;
     wlc_view_focus(view);
     frame_redraw(fr, false);
+    return true;
 }
 
 void child_delete(wlc_handle view) {

@@ -48,8 +48,7 @@ static bool view_created(wlc_handle view) {
         return true;
     }
 
-    child_add(view);
-    return true;
+    return child_add(view);
 }
 
 static void view_destroyed(wlc_handle view) {
