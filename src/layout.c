@@ -17,10 +17,8 @@
 // find the index of a view in a frame
 static uint32_t frame_get_index_of_view(struct frame *fr, wlc_handle view) {
     assert(fr->children->length > 0);
-    uint32_t i = 0;
-    while (*((wlc_handle *) fr->children->items[i]) != view) {
-        i++;
-    }
+    uint32_t i;
+    for (i = 0; *((wlc_handle *) fr->children->items[i]) != view; i++);
     return i;
 }
 
@@ -32,10 +30,9 @@ static wlc_handle frame_get_view_i(struct frame *fr, uint32_t index) {
 // find the index of a given output
 static uint32_t output_get_index(wlc_handle handle) {
     assert(outputs->length > 0);
-    uint32_t i = 0;
-    while (((struct output *) outputs->items[i])->output_handle != handle) {
-        i++;
-    }
+    uint32_t i;
+    for (i = 0; ((struct output *) outputs->items[i])->output_handle != handle;
+            i++);
     return i;
 }
 
@@ -744,10 +741,7 @@ static struct frame *find_frame_selection(struct frame *fr,
     }
 
     struct frame *sel = (dir == DIR_RIGHT) ? fr->right : fr->left;
-    while (sel && sel->split != SPLIT_NONE) {
-        sel = sel->last_focused;
-    }
-
+    for (; sel && sel->split != SPLIT_NONE; sel = sel->last_focused);
     return sel;
 }
 
@@ -787,10 +781,7 @@ static struct frame *find_parent_by_split_simple(struct frame *fr,
     }
 
     struct frame *cur = fr->parent;
-    while (cur && cur->split != sp) {
-        cur = cur->parent;
-    }
-
+    for (; cur && cur->split != sp; cur = cur->parent);
     return cur;
 }
 
