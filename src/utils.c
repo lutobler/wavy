@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 #include <cairo/cairo.h>
 #include <lua.h>
 #include <lauxlib.h>
@@ -77,11 +78,7 @@ enum auto_tile_t tiling_layout_str_to_enum(const char *str) {
 
 // adapted from wlc_exec, supposed to be drop-in replacement
 void cmd_exec(const char *bin, char *const *args) {
-    (void) bin;
-    if (!args) {
-        return;
-    }
-
+    assert(bin && args && (bin == args[0]));
     wavy_log(LOG_DEBUG, "Spawning \"%s\"", bin);
 
     uint32_t len;
@@ -98,6 +95,8 @@ void cmd_exec(const char *bin, char *const *args) {
     pid_t p;
     if ((p = fork()) == 0) {
         setsid();
+        freopen("/dev/null", "w", stdout);
+        freopen("/dev/null", "w", stderr);
         execvp("/bin/sh", (char *const *) argv);
         _exit(EXIT_FAILURE);
     } else if (p < 0) {
