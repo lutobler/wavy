@@ -3,8 +3,8 @@
 #include <stdint.h>
 
 /*
- * Simple vector type that grows dynamically. If it runs out of space,
- * the capacity is doubled.
+ * Simple vector of void pointers that grows dynamically. If it runs out of
+ * space, the capacity is doubled.
  */
 
 struct vector_t {

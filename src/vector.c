@@ -5,7 +5,7 @@
 
 #include "vector.h"
 
-static void vector_resize(struct vector_t *vec) {
+inline static void vector_resize(struct vector_t *vec) {
     if (vec->length == vec->capacity) {
         vec->capacity *= 2;
         vec->items = realloc(vec->items, sizeof(void *) * vec->capacity);
@@ -30,21 +30,14 @@ struct vector_t *vector_init() {
 }
 
 void vector_add(struct vector_t *vec, void *item) {
-    if (!vec) {
-        return;
-    }
-
+    assert(vec);
     vector_resize(vec);
     vec->items[vec->length] = item;
     vec->length++;
 }
 
 void vector_insert(struct vector_t *vec, void *item, uint32_t index) {
-    if (!vec) {
-        return;
-    }
-
-    assert(index <= vec->length);
+    assert(vec && (index <= vec->length));
     vector_resize(vec);
     memmove(&vec->items[index + 1], &vec->items[index],
             sizeof(void *) * (vec->length - index));
@@ -53,31 +46,21 @@ void vector_insert(struct vector_t *vec, void *item, uint32_t index) {
 }
 
 void vector_del(struct vector_t *vec, uint32_t index) {
-    if (!vec || vec->length == 0) {
-        return;
-    }
-
-    assert(index < vec->length);
+    assert(vec && (vec->length > 0) && (index < vec->length));
     vec->length--;
     memmove(&vec->items[index], &vec->items[index + 1],
             sizeof(void *) * (vec->length - index));
 }
 
 void vector_foreach(struct vector_t *vec, void (*foreach_f)(void *item)) {
-    if (!vec || !foreach_f) {
-        return;
-    }
-
-    for (uint32_t i=0; i<vec->length; i++) {
+    assert(vec && foreach_f);
+    for (uint32_t i = 0; i < vec->length; i++) {
         foreach_f(vec->items[i]);
     }
 }
 
 void vector_free(struct vector_t *vec) {
-    if (!vec) {
-        return;
-    }
-
+    assert(vec);
     free(vec->items);
     free(vec);
 }
