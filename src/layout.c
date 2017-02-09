@@ -118,35 +118,19 @@ static void free_frame_tree(struct frame *fr) {
     free_frame(fr);
 }
 
-// sets all views in this and all subframes invisible
-static void frame_set_all_views_invisible(struct frame *fr) {
+// apply a mask to all views in a frame and recursively to all subframes
+static void frame_views_set_mask(struct frame *fr, uint32_t mask) {
     if (!fr) {
         return;
     }
 
     if (fr->split == SPLIT_NONE) {
         for (uint32_t i = 0; i < fr->children->length; i++) {
-            wlc_view_set_mask(frame_get_view_i(fr, i), 0);
+            wlc_view_set_mask(frame_get_view_i(fr, i), mask);
         }
     } else {
-        frame_set_all_views_invisible(fr->left);
-        frame_set_all_views_invisible(fr->right);
-    }
-}
-
-// sets all views in this and all subframes visible
-static void frame_set_all_views_visible(struct frame *fr) {
-    if (!fr) {
-        return;
-    }
-
-    if (fr->split == SPLIT_NONE) {
-        for (uint32_t i = 0; i < fr->children->length; i++) {
-            wlc_view_set_mask(frame_get_view_i(fr, i), 1);
-        }
-    } else {
-        frame_set_all_views_visible(fr->left);
-        frame_set_all_views_visible(fr->right);
+        frame_views_set_mask(fr->left, mask);
+        frame_views_set_mask(fr->right, mask);
     }
 }
 
@@ -154,7 +138,6 @@ struct workspace *get_active_ws() {
     if (active_output) {
         return active_output->active_ws;
     }
-
     return NULL;
 }
 
@@ -162,7 +145,6 @@ struct frame *get_active_frame() {
     if (active_output && active_output->active_ws) {
         return active_output->active_ws->active_frame;
     }
-
     return NULL;
 }
 
@@ -227,7 +209,6 @@ static struct workspace *alloc_next_workspace() {
     ws_new->number = num;
     ws_new->is_visible = false;
     ws_new->assigned_output = NULL;
-
     return ws_new;
 }
 
@@ -235,7 +216,6 @@ void init_layout() {
     outputs = vector_init();
     workspaces = vector_init();
 
-    // set up workspaces
     for (uint32_t i = 0; i < 9; i++) {
         struct workspace *ws = alloc_next_workspace();
         if (ws) {
@@ -381,7 +361,7 @@ void workspace_switch_to(uint32_t num) {
 
     wavy_log(LOG_DEBUG, "Switching to workspace number %d", num + 1);
 
-    frame_set_all_views_invisible(cur_ws->root_frame);
+    frame_views_set_mask(cur_ws->root_frame, 0);
     cur_ws->is_visible = false;
     active_output->active_ws = workspaces->items[num];
 
@@ -392,7 +372,7 @@ void workspace_switch_to(uint32_t num) {
     active_output->active_ws->is_visible = true;
     update_bar(active_output);
     frame_redraw(active_output->active_ws->root_frame, true);
-    frame_set_all_views_visible(active_output->active_ws->root_frame);
+    frame_views_set_mask(active_output->active_ws->root_frame, 1);
     wlc_view_focus(get_active_view());
     wlc_output_schedule_render(active_output->output_handle);
 }
@@ -985,13 +965,9 @@ bool child_add(wlc_handle view) {
 
     *view_ptr = view;
 
-    // insert the new view at the right place in the vector
-    if (fr->children->length == 0) {
-        vector_add(fr->children, view_ptr);
-    } else {
-        uint32_t i = frame_get_index_of_view(fr, fr->active_view);
-        vector_insert(fr->children, view_ptr, i + 1);
-    }
+    uint32_t i = (fr->children->length == 0) ? 0 :
+        frame_get_index_of_view(fr, fr->active_view) + 1;
+    vector_insert(fr->children, view_ptr, i);
 
     fr->active_view = view;
     wlc_view_focus(view);
@@ -1238,9 +1214,8 @@ void move_direction(enum direction_t dir) {
         wlc_handle *tmp = fr->children->items[a];
         fr->children->items[a] = fr->children->items[b];
         fr->children->items[b] = tmp;
-        wlc_handle v = *((wlc_handle *) fr->children->items[b]);
 
-        fr->active_view = v;
+        fr->active_view = *tmp;
         frame_redraw(fr, false);
         wlc_view_focus(fr->active_view);
         return;

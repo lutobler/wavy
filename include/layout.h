@@ -99,11 +99,9 @@ struct frame {
     float rel_size;
 };
 
-// Globals
 extern bool debug_enabled;
 extern struct wavy_config_t *config;
 
-// Static variables
 static struct vector_t *outputs;
 static struct vector_t *workspaces;
 static struct output *active_output;
