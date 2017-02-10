@@ -27,7 +27,6 @@ enum position_t {
 struct wavy_config_t {
     uint32_t statusbar_height;
     char *statusbar_font;
-    double statusbar_font_size;
     uint32_t statusbar_gap;
     uint32_t statusbar_padding;
     enum position_t statusbar_position;

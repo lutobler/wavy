@@ -30,7 +30,6 @@ static void default_config() {
 
     config->statusbar_height                    = 17;
     config->statusbar_font                      = "DejaVu Sans";
-    config->statusbar_font_size                 = 11.0;
     config->statusbar_gap                       = 4;
     config->statusbar_padding                   = 10;
     config->statusbar_position                  = POS_TOP;
@@ -60,15 +59,6 @@ static void set_conf_str(lua_State *L, const char *name, char **conf,
 
     if (lua_getfield(L, idx, name) == LUA_TSTRING) {
         *conf = strdup(lua_tostring(L, -1));
-    }
-    lua_pop(L, 1);
-}
-
-static void set_conf_dbl(lua_State *L, const char *name, double *conf,
-        int32_t idx) {
-
-    if (lua_getfield(L, idx, name) == LUA_TNUMBER) {
-        *conf = lua_tonumber(L, -1);
     }
     lua_pop(L, 1);
 }
@@ -146,7 +136,6 @@ static void bar_config(lua_State *L) {
     int32_t bar_idx = lua_gettop(L);
     set_conf_int(L, "height", &config->statusbar_height, bar_idx);
     set_conf_str(L, "font", &config->statusbar_font, bar_idx);
-    set_conf_dbl(L, "font_size", &config->statusbar_font_size, bar_idx);
     set_conf_int(L, "gap", &config->statusbar_gap, bar_idx);
     set_conf_int(L, "padding", &config->statusbar_padding, bar_idx);
 

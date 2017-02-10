@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <cairo/cairo.h>
+#include <pango/pangocairo.h>
 #include <wlc/wlc-render.h>
 #include <unistd.h>
 #include <string.h>
@@ -80,6 +81,31 @@ void trigger_hook(enum hook_t hook) {
     update_all_bars();
 }
 
+static PangoLayout *setup_pango_layout(cairo_t *cr, char *text) {
+    PangoLayout *layout;
+    PangoFontDescription *desc;
+
+    layout = pango_cairo_create_layout(cr);
+    desc = pango_font_description_from_string(config->statusbar_font);
+    pango_layout_set_text(layout, text, -1);
+    pango_layout_set_font_description(layout, desc);
+    pango_cairo_update_layout(cr, layout);
+    pango_font_description_free(desc);
+
+    return layout;
+}
+
+static void draw_text(cairo_t *cr, PangoLayout *layout, uint32_t w, uint32_t h,
+        uint32_t x, uint32_t y) {
+
+    int width, height;
+    pango_layout_get_size(layout, &width, &height);
+    width /= PANGO_SCALE;
+    height /= PANGO_SCALE;
+    cairo_move_to(cr, x + (w - width)/2, y + (h - height)/2);
+    pango_cairo_show_layout(cr, layout);
+}
+
 static void draw_workspace_indicators(struct output *out) {
     cairo_t *cr = out->bar.cr;
     struct vector_t *workspaces = get_workspaces();
@@ -105,22 +131,14 @@ static void draw_workspace_indicators(struct output *out) {
                 bar_height);
         cairo_fill(cr);
 
-        // workspace number to text
         char num[8];
         sprintf(num, "%d", ws->number + 1); // lets use 1-indexed workspaces
 
-        cairo_text_extents_t te;
+        PangoLayout *layout = setup_pango_layout(cr, num);
         cr_set_argb_color(cr, font_color);
-        cairo_select_font_face(cr, config->statusbar_font,
-                CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-        cairo_set_font_size(cr, config->statusbar_font_size);
-        cairo_text_extents(cr, num, &te);
-        cairo_move_to(cr,
-            i*ws_rect_width + 0.5*(ws_rect_width - (uint32_t) te.width),
-            0.5*(bar_height - (uint32_t) te.height) - (uint32_t) te.y_bearing);
-
-        cairo_show_text(cr, num);
-        cairo_fill(cr);
+        draw_text(cr, layout, ws_rect_width, bar_height,
+                i*ws_rect_width, out->bar.g.origin.y);
+        g_object_unref(layout);
     }
 }
 
@@ -142,23 +160,18 @@ static void draw_data(struct bar_t *bar) {
             continue;
         }
 
-        // no point in drawing overlapping elements
+        // don't draw overlapping elements
         if (prev_x_left > prev_x_right) {
             break;
         }
 
-        cairo_text_extents_t te;
-        cairo_select_font_face(cr, config->statusbar_font,
-                CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-        cairo_set_font_size(cr, config->statusbar_font_size);
-        cairo_text_extents(cr, e->entry, &te);
-
-        // background color
-        cr_set_argb_color(cr, e->bg_color);
+        int text_width, text_height;
+        PangoLayout *layout = setup_pango_layout(cr, e->entry);
+        pango_layout_get_size(layout, &text_width, &text_height);
+        text_width /= PANGO_SCALE;
 
         uint32_t x = 0;
-        uint32_t y = 0.5 * (bar_height - te.height) - te.y_bearing;
-        uint32_t width= te.width + 2*padding;
+        uint32_t width = text_width + 2*padding;
 
         if (e->side == SIDE_RIGHT) {
             x = prev_x_right - width - gap;
@@ -169,14 +182,14 @@ static void draw_data(struct bar_t *bar) {
         }
 
         // background
+        cr_set_argb_color(cr, e->bg_color);
         cairo_rectangle(cr, x, 0, width, bar_height);
         cairo_fill(cr);
 
         // text
         cr_set_argb_color(cr, e->fg_color);
-        cairo_move_to(cr, x + padding, y);
-        cairo_show_text(cr, e->entry);
-        cairo_fill(cr);
+        draw_text(cr, layout, width, bar_height, x, bar->g.origin.y);
+        g_object_unref(layout);
     }
 }
 
