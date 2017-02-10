@@ -285,8 +285,7 @@ void init_config() {
     // execute the script and initialize its global variables
     int32_t err = lua_pcall(L_config, 0, 0, 0);
     if (err == LUA_ERRRUN) {
-        wavy_log(LOG_ERROR, "Lua runtime error");
-        exit(EXIT_FAILURE);
+        luaL_error(L_config, "Runtime error");
     }
 
     default_config();
