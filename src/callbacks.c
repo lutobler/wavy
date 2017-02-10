@@ -12,18 +12,8 @@
 #include "wallpaper.h"
 #include "utils.h"
 
-/*
- * Return true if window should be managed by wavy and false otherwise (for
- * popups, splash screens etc.). See wlc_view_type_bit.
- */
-inline static bool is_managed(wlc_handle view) {
-    return !(wlc_view_get_type(view) & 0xf);
-}
-
-/*
- * "key" is a keycode. We use keysyms internally for keybindings for now, but
- * will (hopefully) support keybindings with keycodes as well in the future.
- */
+// "key" is a keycode. We use keysyms internally for keybindings for now, but
+// will (hopefully) support keybindings with keycodes as well in the future.
 static bool handle_key(wlc_handle view, uint32_t time,
         const struct wlc_modifiers *modifiers, uint32_t key,
         enum wlc_key_state state) {
@@ -41,18 +31,56 @@ static bool view_created(wlc_handle view) {
     wavy_log(LOG_DEBUG, "View (handle = %lu, type = %u) created.", view,
             wlc_view_get_type(view));
 
-    if (!is_managed(view)) {
-        wlc_view_set_mask(view, wlc_output_get_mask(wlc_view_get_output(view)));
-        wlc_view_focus(view);
-        wlc_view_bring_to_front(view);
-        return true;
+    const struct wlc_geometry *anchor_rect;
+    anchor_rect = wlc_view_positioner_get_anchor_rect(view);
+    if (anchor_rect) {
+        struct wlc_size size_req = *wlc_view_positioner_get_size(view);
+        if ((size_req.w <= 0) || (size_req.h <= 0)) {
+            const struct wlc_geometry *current = wlc_view_get_geometry(view);
+            size_req = current->size;
+        }
+        struct wlc_geometry g = {
+            .origin = anchor_rect->origin,
+            .size = size_req
+        };
+        wlc_handle parent = wlc_view_get_parent(view);
+        if (parent) {
+            const struct wlc_geometry *parent_g = wlc_view_get_geometry(parent);
+            g.origin.x += parent_g->origin.x;
+            g.origin.y += parent_g->origin.y;
+        }
+        wlc_view_set_geometry(view, 0, &g);
     }
 
-    return child_add(view);
+    switch (wlc_view_get_type(view)) {
+
+    // regular view thats goes into tiling mode
+    case 0:
+        return child_add(view);
+
+    // these views don't get focus
+    case WLC_BIT_SPLASH:
+    case WLC_BIT_UNMANAGED:
+    case WLC_BIT_POPUP:
+        wlc_view_bring_to_front(view);
+        wlc_view_set_mask(view, 1);
+        break;
+
+    // these views do
+    case WLC_BIT_OVERRIDE_REDIRECT:
+    case WLC_BIT_MODAL:
+    default:
+        wlc_view_focus(view);
+        wlc_view_bring_to_front(view);
+        wlc_view_set_mask(view, 1);
+        break;
+    }
+
+    return true;
 }
 
 static void view_destroyed(wlc_handle view) {
-    if (is_managed(view)) {
+    if (wlc_view_get_type(view) == 0) {
         child_delete(view);
     } else {
         wlc_view_focus(get_active_view());
@@ -90,12 +118,13 @@ static bool pointer_motion(wlc_handle view, uint32_t time,
     return false;
 }
 
+// does nothing
 static void view_focus(wlc_handle view, bool focus) {
-    wlc_view_set_state(view, WLC_BIT_ACTIVATED, focus);
+    (void) view;
+    (void) focus;
 	return;
 }
 
-// wlc gives view = 0 every time at the moment.
 static bool pointer_button(wlc_handle view, uint32_t time,
         const struct wlc_modifiers *mods,
         uint32_t button, enum wlc_button_state state,
@@ -110,17 +139,14 @@ static bool pointer_button(wlc_handle view, uint32_t time,
 
     if (state == WLC_BUTTON_STATE_PRESSED) {
         focus_view(view);
-        return false;
-    } else {
-        return false;
     }
+    return false;
 }
 
-// wlc sends geometry requests after we already set it, so we ignore it.
 static void view_request_geometry(wlc_handle view,
         const struct wlc_geometry *g) {
 
-    if (!is_managed(view)) {
+    if (wlc_view_get_type(view) != 0) {
         wavy_log(LOG_DEBUG, "Applying requested geometry to view %lu", view);
         wlc_view_set_geometry(view, 0, g);
     }
@@ -143,7 +169,6 @@ static void compositor_ready() {
 
 static void wlc_log(enum wlc_log_type type, const char *str) {
     (void) type;
-
     wavy_log(LOG_WLC, (char *) str);
 }
 
