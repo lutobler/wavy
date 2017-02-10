@@ -420,16 +420,14 @@ void frame_recalc_geometries(struct frame *fr, struct wlc_geometry g) {
     frame_recalc_geometries(fr->right, g_right);
 }
 
-static inline void set_view(struct frame *fr, wlc_handle view,
+static void set_view(struct frame *fr, wlc_handle view,
         struct wlc_geometry *g) {
 
     uint32_t view_border = config->view_border_size;
     struct wlc_geometry g_border;
 
-    /*
-     * Geometry for the view border. Offset inside the frame buffer by x and y,
-     * relative to the frame, not the output!
-     */
+    // Geometry for the view border. Offset inside the frame buffer by x and y,
+    // relative to the frame, not the output!
     g_border.origin.x = g->origin.x - fr->border.g_gaps.origin.x;
     g_border.origin.y = g->origin.y - fr->border.g_gaps.origin.y;
     g_border.size.w = g->size.w;
