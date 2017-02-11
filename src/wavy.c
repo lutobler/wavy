@@ -77,11 +77,11 @@ int main(int argc, char **argv) {
 
     wlc_run();
 
+    stop_bar_threads();
     free_commands();
     free_config();
     free_all_outputs();
     free_workspaces();
-    stop_bar_threads();
 
     exit(EXIT_SUCCESS);
 }
