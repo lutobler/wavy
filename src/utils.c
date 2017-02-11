@@ -88,7 +88,6 @@ void cmd_exec(const char *bin, char *const *args) {
     }
     size_t size = bytes + len + 12;
 
-    printf("size = %lu, len = %u, bytes = %u\n", size, len, bytes);
     char *cmd = malloc(size);
     if (!cmd) {
         wavy_log(LOG_ERROR, "Failed to allocate memory for spawning commands");
@@ -100,8 +99,6 @@ void cmd_exec(const char *bin, char *const *args) {
         cmd[c++] = ' ';
     }
     cmd[size - 1] = 0;
-
-    printf("cmd = %s\n", cmd);
 
     pid_t p;
     if ((p = fork()) == 0) {
