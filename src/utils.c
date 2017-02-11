@@ -86,7 +86,7 @@ void cmd_exec(const char *bin, char *const *args) {
     for (len = 0; args[len]; len++) {
         bytes += strlen(args[len]);
     }
-    size_t size = bytes + len + 12;
+    size_t size = bytes + len;
 
     char *cmd = malloc(size);
     if (!cmd) {
