@@ -1,7 +1,6 @@
 CMakeFiles/
 bin/
 tests/
-garbage/
 tags
 .gdb_history
 todo.org
