@@ -82,25 +82,36 @@ void cmd_exec(const char *bin, char *const *args) {
     wavy_log(LOG_DEBUG, "Spawning \"%s\"", bin);
 
     uint32_t len;
-    for (len = 0; args[len]; len++);
-    char **argv = malloc(sizeof(char *const) * (len + 3));
-    if (!argv) {
+    uint32_t bytes = 0;
+    for (len = 0; args[len]; len++) {
+        bytes += strlen(args[len]);
+    }
+    size_t size = bytes + len + 12;
+
+    printf("size = %lu, len = %u, bytes = %u\n", size, len, bytes);
+    char *cmd = malloc(size);
+    if (!cmd) {
         wavy_log(LOG_ERROR, "Failed to allocate memory for spawning commands");
     }
-    memcpy(argv+2, args, len * sizeof(char *const *));
-    argv[0] = "/bin/sh";
-    argv[1] = "-c";
-    argv[len+2] = NULL;
+    uint32_t c = 0;
+    for (uint32_t i = 0; i < len; i++) {
+        strcpy(cmd+c, args[i]);
+        c += strlen(args[i]);
+        cmd[c++] = ' ';
+    }
+    cmd[size - 1] = 0;
+
+    printf("cmd = %s\n", cmd);
 
     pid_t p;
     if ((p = fork()) == 0) {
         setsid();
         freopen("/dev/null", "w", stdout);
         freopen("/dev/null", "w", stderr);
-        execvp("/bin/sh", (char *const *) argv);
+        execl("/bin/sh", "/bin/sh", "-c", cmd, NULL);
         _exit(EXIT_FAILURE);
     } else if (p < 0) {
         wavy_log(LOG_ERROR, "Failed to fork for \'%s\'", bin);
     }
-    free(argv);
+    free(cmd);
 }
