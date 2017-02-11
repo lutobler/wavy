@@ -81,7 +81,7 @@ qt_dec = "QT_WAYLAND_DISABLE_WINDOWDECORATION=1 "
 
 -- using a shell so env variables work
 qb = {qt_wl .. qt_dec .. "qutebrowser", "--backend", "webengine"}
-dmenu = {"dmenu_run", "-b", "-fn", "Terminess Powerline-12:Regular", "-p", ">>>"}
+dmenu = {"dmenu_run", "-b", "-fn", "\'Terminess Powerline-12:Regular\'", "-p", "\'>>>\'"}
 
 -- application shortcuts
 kb_spawn({modkey, "shift"}, "Return", {"xterm"})
