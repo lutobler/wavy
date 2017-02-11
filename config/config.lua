@@ -1,3 +1,5 @@
+package.path = os.getenv("HOME") .. "/.config/wavy/?.lua;" .. package.path
+package.cpath = "/home/luke/wavy/?.so;" .. package.cpath
 require("utils")
 
 -- color format: 32 bit integer, RGBA (red, green, blue, alpha)
@@ -30,8 +32,7 @@ autostart = { }
 --[[ STATUSBAR ]]--
 bar = {
     height      = 18,
-    font        = "DejaVu Sans",
-    font_size   = 11.0,
+    font        = "Terminess Powerline 9",
     gap         = 4,        -- between entries
     padding     = 10,       -- inside entry box
     position    = "top",    -- bottom, top
@@ -66,7 +67,12 @@ bar = {
 
 --[[ KEYBINDINGS ]]--
 -- availabe modifiers: shift, super, alt, ctrl, caps, mod2, mod3, mod5
-modkey = "ctrl"
+m = os.getenv("WAVY_MOD")
+if m then
+    modkey = m
+else
+    modkey = "ctrl"
+end
 
 qt_wl = "QT_QPA_PLATFORM=wayland-egl "
 qt_dec = "QT_WAYLAND_DISABLE_WINDOWDECORATION=\"1\" "
