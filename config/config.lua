@@ -27,7 +27,9 @@ layouts = {
 }
 
 -- commands executed at startup.
-autostart = { }
+autostart = {
+    {"xrdb", "$HOME/.Xresources"}
+}
 
 --[[ STATUSBAR ]]--
 bar = {
@@ -75,7 +77,7 @@ else
 end
 
 qt_wl = "QT_QPA_PLATFORM=wayland-egl "
-qt_dec = "QT_WAYLAND_DISABLE_WINDOWDECORATION=\"1\" "
+qt_dec = "QT_WAYLAND_DISABLE_WINDOWDECORATION=1 "
 
 -- using a shell so env variables work
 qb = {qt_wl .. qt_dec .. "qutebrowser", "--backend", "webengine"}
