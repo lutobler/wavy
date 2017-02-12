@@ -21,7 +21,7 @@ struct keybind_arg_t {
 struct keybind_t {
 	uint32_t keysym;
 	uint32_t mods;
-    bool (*keybind_f) (struct keybind_t * args, wlc_handle view);
+    void (*keybind_f) (struct keybind_t * args, wlc_handle view);
     struct keybind_arg_t args;
 };
 
@@ -31,29 +31,29 @@ extern lua_State *L_config;
 static struct vector_t *commands;
 
 // Commands that can be bound to a keypress
-bool close_view_cmd(struct keybind_t *kb, wlc_handle view);
-bool exit_cmd(struct keybind_t *kb, wlc_handle view);
-bool spawn_cmd(struct keybind_t *kb, wlc_handle view);
-bool lua_cmd(struct keybind_t *kb, wlc_handle view);
-bool cycle_tiling_mode_cmd(struct keybind_t *kb, wlc_handle view);
-bool cycle_view_cmd(struct keybind_t *kb, wlc_handle view);
-bool new_frame_cmd(struct keybind_t *kb, wlc_handle view);
-bool delete_frame_cmd(struct keybind_t *kb, wlc_handle view);
-bool select_cmd(struct keybind_t *kb, wlc_handle view);
-bool resize_cmd(struct keybind_t *kb, wlc_handle view);
-bool switch_workspace_cmd(struct keybind_t *kb, wlc_handle view);
-bool prev_workspace_cmd(struct keybind_t *kb, wlc_handle view);
-bool next_workspace_cmd(struct keybind_t *kb, wlc_handle view);
-bool move_to_ws_cmd(struct keybind_t *kb, wlc_handle view);
-bool add_ws_cmd(struct keybind_t *kb, wlc_handle view);
-bool move_cmd(struct keybind_t *kb, wlc_handle view);
+void close_view_cmd(struct keybind_t *kb, wlc_handle view);
+void exit_cmd(struct keybind_t *kb, wlc_handle view);
+void spawn_cmd(struct keybind_t *kb, wlc_handle view);
+void lua_cmd(struct keybind_t *kb, wlc_handle view);
+void cycle_tiling_mode_cmd(struct keybind_t *kb, wlc_handle view);
+void cycle_view_cmd(struct keybind_t *kb, wlc_handle view);
+void new_frame_cmd(struct keybind_t *kb, wlc_handle view);
+void delete_frame_cmd(struct keybind_t *kb, wlc_handle view);
+void select_cmd(struct keybind_t *kb, wlc_handle view);
+void resize_cmd(struct keybind_t *kb, wlc_handle view);
+void switch_workspace_cmd(struct keybind_t *kb, wlc_handle view);
+void prev_workspace_cmd(struct keybind_t *kb, wlc_handle view);
+void next_workspace_cmd(struct keybind_t *kb, wlc_handle view);
+void move_to_ws_cmd(struct keybind_t *kb, wlc_handle view);
+void add_ws_cmd(struct keybind_t *kb, wlc_handle view);
+void move_cmd(struct keybind_t *kb, wlc_handle view);
 
 void init_commands();
 void free_commands();
 
 // inserts/updates commands in the command list.
 void cmd_update(uint32_t mods, uint32_t keysym, struct keybind_arg_t args,
-        bool (*keybind_f) (struct keybind_t * args, wlc_handle view));
+        void (*keybind_f) (struct keybind_t * args, wlc_handle view));
 
 // gets called every time a key is pressed.
 bool eval_keypress(wlc_handle view, uint32_t mods, uint32_t keysym);
