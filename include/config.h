@@ -60,7 +60,6 @@ struct wavy_config_t *config;
 lua_State *L_config;
 
 static uint32_t default_mod;
-static bool is_font_set = 0;
 
 void init_config();
 void free_config();
