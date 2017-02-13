@@ -125,6 +125,13 @@ static void frame_views_set_mask(struct frame *fr, uint32_t mask) {
     }
 
     if (fr->split == SPLIT_NONE) {
+        // if a frame is in fullscreen tiling mode, only the active view
+        // is to be set visible.
+        if (mask == 1 && config->tile_layouts[fr->tile] == TILE_FULLSCREEN) {
+            wlc_view_set_mask(fr->active_view, mask);
+            return;
+        }
+
         for (uint32_t i = 0; i < fr->children->length; i++) {
             wlc_view_set_mask(frame_get_view_i(fr, i), mask);
         }
