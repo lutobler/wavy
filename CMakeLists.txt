@@ -1,25 +1,41 @@
-cmake_minimum_required (VERSION 3.3)
-project (wavy)
+cmake_minimum_required(VERSION 3.3)
+project(wavy C)
 
-set (CMAKE_C_COMPILER clang)
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -Wall -Wextra -Wpedantic")
-set (CMAKE_C_STANDARD 99)
-set (CMAKE_C_EXTENSIONS OFF)
-add_definitions (-D_GNU_SOURCE)
+# Using clang for now because gcc gives lots of useless warnings.
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -Wall -Wextra -Wpedantic")
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_EXTENSIONS OFF)
+add_definitions(-D_GNU_SOURCE)
 
-include_directories (
+# TODO: This works on Arch Linux. Make this work on any system.
+include_directories(
     include
+    protocols
     /usr/include/cairo
     /usr/include/pango-1.0
     /usr/include/glib-2.0
     /usr/lib/glib-2.0/include
 )
 
-file (GLOB SOURCES src/*.c)
-add_executable (wavy ${SOURCES})
-add_library (waveform SHARED src/lib/waveform.c)
-target_link_libraries (
-    wavy
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+add_subdirectory(protocols)
+
+add_executable(wavy
+    src/bar.c
+    src/border.c
+    src/callbacks.c
+    src/commands.c
+    src/config.c
+    src/extensions.c
+    src/layout.c
+    src/log.c
+    src/utils.c
+    src/vector.c
+    src/wavy.c
+)
+
+target_link_libraries(wavy
     m
     wlc
     xkbcommon
@@ -29,4 +45,9 @@ target_link_libraries (
     cairo
     pango-1.0
     pangocairo-1.0
+    wayland-client
+    wayland-server
+    wavy-protocols
 )
+
+add_library(waveform SHARED src/lib/waveform.c)

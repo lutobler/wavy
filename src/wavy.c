@@ -10,6 +10,7 @@
 #include "config.h"
 #include "layout.h"
 #include "bar.h"
+#include "extensions.h"
 
 static const char *wavy_version = "wavy version: 0.0.1\n";
 bool debug_enabled = false;
@@ -74,6 +75,9 @@ int main(int argc, char **argv) {
     if (!wlc_init()) {
         exit(EXIT_FAILURE);
     }
+
+    // wayland protocol extensions
+    register_extensions();
 
     wlc_run();
 

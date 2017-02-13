@@ -28,7 +28,8 @@ layouts = {
 
 -- commands executed at startup.
 autostart = {
-    {"xrdb", "$HOME/.Xresources"}
+    {"xrdb", "$HOME/.Xresources"},
+    {"redshift", "-m", "wayland"}
 }
 
 --[[ STATUSBAR ]]--
