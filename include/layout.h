@@ -32,14 +32,6 @@ struct output {
     wlc_handle output_handle;
     struct wlc_geometry g; // geometry adjusted for the statusbar
 
-    // TODO
-    struct wallpaper_t {
-        unsigned char *buffer;
-        cairo_surface_t *surface;
-        wlc_resource w_surface; // ???
-        struct wlc_geometry g;
-    } wallpaper;
-
     struct bar_t {
         unsigned char *buffer;
         struct wlc_geometry g;
