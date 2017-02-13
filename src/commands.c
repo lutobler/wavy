@@ -37,10 +37,13 @@ void spawn_cmd(struct keybind_t *kb, wlc_handle view) {
 
 void lua_cmd(struct keybind_t *kb, wlc_handle view) {
     (void) view;
+    pthread_mutex_lock(&lua_lock);
     lua_rawgeti(L_config, LUA_REGISTRYINDEX, kb->args.num);
-    if (lua_pcall(L_config, 0, 0, 0) != LUA_OK) {
-        wavy_log(LOG_ERROR, "Error occured in lua keybinding function");
+    int err;
+    if ((err = lua_pcall(L_config, 0, 0, 0)) != LUA_OK) {
+        wavy_log(LOG_ERROR, "Error %d occured in lua keybinding function", err);
     }
+    pthread_mutex_unlock(&lua_lock);
 }
 
 void cycle_tiling_mode_cmd(struct keybind_t *kb, wlc_handle view) {

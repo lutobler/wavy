@@ -56,11 +56,6 @@ struct wavy_config_t {
     struct vector_t *autostart;
 };
 
-struct wavy_config_t *config;
-lua_State *L_config;
-
-static uint32_t default_mod;
-
 void init_config();
 void free_config();
 

@@ -37,16 +37,13 @@ struct status_entry_t {
 
 extern struct wavy_config_t *config;
 extern lua_State *L_config;
+extern pthread_mutex_t lua_lock;
 
 static struct vector_t *status_entries;
 
 // threads that periodically trigger the fast/slow hooks
 static pthread_t hook_thread_fast;
 static pthread_t hook_thread_slow;
-
-// mutex that makes sure only one hook is updating data at a time.
-// this prevents concurrent use of the lua state.
-static pthread_mutex_t hook_lock;
 
 void add_widget(enum side_t side, enum hook_t hook, int lua_ref);
 

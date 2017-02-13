@@ -6,6 +6,7 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include <pthread.h>
 
 #include "vector.h"
 #include "layout.h"
@@ -27,6 +28,7 @@ struct keybind_t {
 
 extern bool debug_enabled;
 extern lua_State *L_config;
+extern pthread_mutex_t lua_lock;
 
 static struct vector_t *commands;
 

@@ -70,14 +70,14 @@ static void update_entry(struct status_entry_t *entry) {
 }
 
 void trigger_hook(enum hook_t hook) {
-    pthread_mutex_lock(&hook_lock);
+    pthread_mutex_lock(&lua_lock);
     for (uint32_t i = 0; i < status_entries->length; i++) {
         struct status_entry_t *e = status_entries->items[i];
         if (e->hook == hook) {
             update_entry(e);
         }
     }
-    pthread_mutex_unlock(&hook_lock);
+    pthread_mutex_unlock(&lua_lock);
     update_all_bars();
 }
 
@@ -275,7 +275,6 @@ static void *trigger_all_hooks(void *arg) {
 }
 
 void init_bar_threads() {
-    pthread_mutex_init(&hook_lock, NULL);
     pthread_create(&hook_thread_fast, NULL, hook_thread_fast_func, NULL);
     pthread_create(&hook_thread_slow, NULL, hook_thread_slow_func, NULL);
 }
