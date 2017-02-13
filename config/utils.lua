@@ -156,10 +156,17 @@ function brt()
 end
 
 function brtcontrol(action)
-    if action == "up" then
+    cur_cmd = [[ light -G | xargs printf "%.0f\n" ]]
+    local cur = tonumber(exec(cmd))
+
+    if action == "up" and cur >= 20 then
         cmd = [[ light -A 5 ]]
-    elseif action == "down" then
+    elseif action == "up" and cur < 20 then
+        cmd = [[ light -A 1 ]]
+    elseif action == "down" and cur >= 25 then
         cmd = [[ light -U 5 ]]
+    elseif action == "down" and cur < 25 then
+        cmd = [[ light -U 1 ]]
     else
         return
     end
