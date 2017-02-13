@@ -9,7 +9,6 @@
 #include "border.h"
 #include "layout.h"
 #include "bar.h"
-#include "wallpaper.h"
 #include "utils.h"
 
 // "key" is a keycode. We use keysyms internally for keybindings for now, but
@@ -154,7 +153,6 @@ static void view_request_geometry(wlc_handle view,
 
 static void output_render_pre(wlc_handle output) {
     struct output *out = get_output_by_handle(output);
-    render_wallpaper(out);
     render_frame_borders(out->active_ws->root_frame);
     render_bar(out);
 }
