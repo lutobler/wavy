@@ -451,7 +451,7 @@ static void set_view(struct frame *fr, wlc_handle view,
     wlc_view_set_geometry(view, 0, g);
 }
 
-void frame_redraw(struct frame *fr, bool realloc) {
+static void _frame_redraw(struct frame *fr, bool realloc) {
     if (!fr) {
         return;
     }
@@ -468,9 +468,6 @@ void frame_redraw(struct frame *fr, bool realloc) {
 
     // do nothing when there are no child views
     if (!fr->children || fr->children->length == 0) {
-        // the hook needs to be triggered so left-over bar titles or layout
-        // indicators can be redrawn (removed) properly
-        trigger_hook(HOOK_VIEW_UPDATE);
         return;
     }
 
@@ -621,7 +618,10 @@ void frame_redraw(struct frame *fr, bool realloc) {
             set_view(fr, v, &g);
         }
     }
+}
 
+void frame_redraw(struct frame *fr, bool realloc) {
+    _frame_redraw(fr, realloc);
     trigger_hook(HOOK_VIEW_UPDATE);
 }
 
