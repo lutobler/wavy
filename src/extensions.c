@@ -1,11 +1,19 @@
+#include <stdlib.h>
 #include <stdint.h>
 #include <wlc/wlc.h>
+#include <wlc/wlc-render.h>
 #include <wlc/wlc-wayland.h>
 #include <wayland-server.h>
 
-#include "extensions.h"
 #include "wayland-gamma-control-server-protocol.h"
+#include "wayland-background-server-protocol.h"
+#include "wayland-background-client-protocol.h"
+#include "extensions.h"
 #include "log.h"
+
+/*
+ * Gamma control API
+ */
 
 static void gamma_control_destroy(struct wl_client *client,
         struct wl_resource *res) {
@@ -92,13 +100,67 @@ static void gamma_control_manager_bind(struct wl_client *client, void *data,
             &gamma_control_manager_interface, version, fd);
     if (!resource) {
         wl_client_post_no_memory(client);
+        return;
     }
 
     wl_resource_set_implementation(resource, &gamma_manager_implementation,
             NULL, NULL);
 }
 
+/*
+ * Background API
+ */
+
+static void set_background(struct wl_client *client,
+        struct wl_resource *resource, struct wl_resource *_output,
+        struct wl_resource *surface) {
+
+    (void) resource;
+    (void) client;
+    wlc_handle output = wlc_handle_from_wl_output_resource(_output);
+    if (!output) {
+        return;
+    }
+
+    wlc_resource wlc_res = wlc_resource_from_wl_surface_resource(surface);
+    if (!wlc_res) {
+        return;
+    }
+
+    wavy_log(LOG_DEBUG, "Setting surface %p as background for output %d",
+        surface, (int) output);
+
+    wlc_handle_set_user_data(output, (void *) wlc_res);
+    wlc_output_schedule_render(output);
+}
+
+static struct background_interface background_implementation = {
+    .set_background = set_background
+};
+
+static void background_bind(struct wl_client *client, void *data,
+        uint32_t version, uint32_t id) {
+
+    (void) data;
+    if (version > 1) {
+        return; // unsupported version
+    }
+
+    struct wl_resource *resource = wl_resource_create(client,
+                       &background_interface, version, id);
+    if (!resource) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+
+    wl_resource_set_implementation(resource, &background_implementation,
+            NULL, NULL);
+}
+
 void register_extensions(void) {
+    backgrounds = vector_init();
+    wl_global_create(wlc_get_wl_display(), &background_interface, 1, NULL,
+            background_bind);
     wl_global_create(wlc_get_wl_display(), &gamma_control_manager_interface, 1,
             NULL, gamma_control_manager_bind);
 }

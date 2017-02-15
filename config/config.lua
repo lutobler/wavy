@@ -15,6 +15,8 @@ config = {
     view_border_size                    = 2,
     view_border_active_color            = 0x4897cfff,
     view_border_inactive_color          = 0x475b74ff,
+
+    wallpaper                           = "/home/luke/wp.png"
 }
 
 -- layouts: vertical, horizontal, grid, fullscreen, fibonacci

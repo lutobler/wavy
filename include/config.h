@@ -48,6 +48,8 @@ struct wavy_config_t {
     uint32_t view_border_active_color;
     uint32_t view_border_inactive_color;
 
+    char *wallpaper; // file path
+
     enum auto_tile_t tile_layouts[5];
     char *tile_layout_strs[5];
     uint32_t num_layouts;

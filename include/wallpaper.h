@@ -1,15 +1,12 @@
 #ifndef __WALLPAPER_H
 #define __WALLPAPER_H
 
-#include <cairo/cairo.h>
+#include <wlc/wlc.h>
 
-#include "layout.h"
+#include "config.h"
 
-// TODO make this configurable
-/* static char *wp_file = "/home/luke/test.png"; */
-static char *wp_file = "/home/luke/wp.png";
+extern struct wavy_config_t *config;
 
-void init_wallpaper(struct output *out, uint32_t width, uint32_t height);
-void render_wallpaper(struct output *out);
+void init_wallpaper();
 
 #endif

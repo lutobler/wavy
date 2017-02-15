@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <wlc/wlc.h>
+#include <wlc/wlc-render.h>
 
 #include "log.h"
 #include "callbacks.h"
@@ -10,6 +11,7 @@
 #include "layout.h"
 #include "bar.h"
 #include "utils.h"
+#include "wallpaper.h"
 
 // "key" is a keycode. We use keysyms internally for keybindings for now, but
 // will (hopefully) support keybindings with keycodes as well in the future.
@@ -153,6 +155,17 @@ static void view_request_geometry(wlc_handle view,
 
 static void output_render_pre(wlc_handle output) {
     struct output *out = get_output_by_handle(output);
+
+    wlc_resource surface;
+    surface = (wlc_resource) wlc_handle_get_user_data(output);
+    if (surface) {
+        const struct wlc_geometry g = {
+            wlc_origin_zero,
+            *wlc_output_get_resolution(output)
+        };
+        wlc_surface_render(surface, &g);
+    }
+
     render_frame_borders(out->active_ws->root_frame);
     render_bar(out);
 }
@@ -163,6 +176,8 @@ static void compositor_ready() {
         char *const *str_arr = (char *const *) config->autostart->items[i];
         cmd_exec(str_arr[0], str_arr);
     }
+
+    init_wallpaper();
 }
 
 static void wlc_log(enum wlc_log_type type, const char *str) {

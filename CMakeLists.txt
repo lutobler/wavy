@@ -32,7 +32,9 @@ add_executable(wavy
     src/log.c
     src/utils.c
     src/vector.c
+    src/wallpaper.c
     src/wavy.c
+    src/wayland.c
 )
 
 target_link_libraries(wavy

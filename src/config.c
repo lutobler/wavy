@@ -8,12 +8,24 @@
 #include <lualib.h>
 #include <lauxlib.h>
 #include <wlc/wlc.h>
+#include <pthread.h>
 
 #include "commands.h"
 #include "config.h"
 #include "log.h"
 #include "bar.h"
 #include "utils.h"
+
+// global config pointer
+struct wavy_config_t *config = NULL;
+
+// global lua_State
+lua_State *L_config = NULL;
+
+// global mutex that prevents concurrent access to the lua_State.
+// needs to be reentrant because a lua function can can call trigger_hook,
+// which takes the lock again.
+pthread_mutex_t lua_lock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
 static void default_config() {
     config->frame_gaps_size                     = 5;
@@ -229,6 +241,8 @@ static void read_config(lua_State *L) {
             &config->view_border_active_color, 1);
     set_conf_int(L, "view_border_inactive_color",
             &config->view_border_inactive_color, 1);
+
+    set_conf_str(L, "wallpaper", &config->wallpaper, 1);
 
     set_layouts(L);
     set_autostart(L);

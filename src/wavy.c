@@ -11,6 +11,7 @@
 #include "layout.h"
 #include "bar.h"
 #include "extensions.h"
+#include "wallpaper.h"
 
 static const char *wavy_version = "wavy version: 0.0.1\n";
 bool debug_enabled = false;
