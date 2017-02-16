@@ -44,16 +44,14 @@ static void frame_buffer_realloc(struct frame *fr) {
     fr->border.cr = NULL;
     fr->border.surface = NULL;
 
-	int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
-                                                fr->border.g_gaps.size.w);
-
-    fr->border.buf_size = stride * fr->border.g_gaps.size.h * sizeof(unsigned char);
-    fr->border.buffer = calloc(fr->border.buf_size, 1);
+	int stride = 4 * fr->border.g_gaps.size.w;
+    fr->border.buf_size = stride * fr->border.g_gaps.size.h;
+    fr->border.buffer = calloc(fr->border.buf_size, sizeof(unsigned char));
     fr->border.surface = cairo_image_surface_create_for_data(fr->border.buffer,
-                                                        CAIRO_FORMAT_ARGB32,
-                                                        fr->border.g_gaps.size.w,
-                                                        fr->border.g_gaps.size.h,
-                                                        stride);
+                                                    CAIRO_FORMAT_ARGB32,
+                                                    fr->border.g_gaps.size.w,
+                                                    fr->border.g_gaps.size.h,
+                                                    stride);
     fr->border.cr = cairo_create(fr->border.surface);
 }
 
@@ -61,11 +59,9 @@ void free_border(struct border_t *border) {
     if (border->buffer) {
         free(border->buffer);
     }
-
     if (border->cr) {
         cairo_destroy(border->cr);
     }
-
     if (border->surface) {
         cairo_surface_destroy(border->surface);
     }
@@ -94,7 +90,7 @@ void update_frame_border(struct frame *fr, bool realloc) {
         frame_buffer_realloc(fr);
     } else {
         // just clear the buffer by setting it to zero
-        memset(fr->border.buffer, 0, fr->border.buf_size);
+        memset(fr->border.buffer, 0x0, fr->border.buf_size);
     }
 
     cairo_t *cr = fr->border.cr;
