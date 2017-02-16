@@ -218,8 +218,10 @@ void update_bar(struct output *out) {
         if (out->bar.buffer) {
             free(out->bar.buffer);
         }
-        cairo_surface_destroy(out->bar.surface);
-        cairo_destroy(out->bar.cr);
+        if (out->bar.surface) {
+            cairo_surface_destroy(out->bar.surface);
+            cairo_destroy(out->bar.cr);
+        }
         alloc_bar(out);
         out->bar.dirty = false;
     } else {
@@ -287,7 +289,6 @@ void init_bar_threads() {
 void init_bar(struct output *out) {
     out->bar.dirty = true;
     pthread_mutex_init(&out->bar.draw_lock, NULL);
-    update_bar(out);
 
     // trigger all the hooks once on initialization. use a separate thread
     // so startup isn't blocked by a slow script.

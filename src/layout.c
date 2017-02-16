@@ -298,7 +298,7 @@ static void output_update_resolution(struct output *out, uint32_t width,
 }
 
 void add_output(wlc_handle output) {
-    struct output *new_out = malloc(sizeof(struct output));
+    struct output *new_out = calloc(sizeof(struct output), 1);
     if (!new_out) {
         wavy_log(LOG_ERROR, "Failed to allocate new output");
         return;
