@@ -6,11 +6,11 @@ require("utils")
 config = {
     frame_gaps_size                     = 0,
     frame_border_size                   = 0,
-    frame_border_empty_size             = 4,
+    frame_border_empty_size             = 5,
     frame_border_active_color           = 0x475b74ff,
     frame_border_inactive_color         = 0x475b74ff,
-    frame_border_empty_active_color     = 0x0c1cffff,
-    frame_border_empty_inactive_color   = 0x6b6c7fff,
+    frame_border_empty_active_color     = 0x0c1cff80,
+    frame_border_empty_inactive_color   = 0x6b6c7f80,
 
     view_border_size                    = 2,
     view_border_active_color            = 0x4897cfff,
@@ -43,11 +43,11 @@ bar = {
     position    = "top",    -- bottom, top
 
     colors = {
-        background              = 0x282828ff,
-        active_workspace        = 0x70407fff,
-        inactive_workspace      = 0x404055ff,
-        active_workspace_font   = 0xffffffff,
-        inactive_workspace_font = 0xccccccff,
+        background              = 0x282828a0,
+        active_workspace        = 0x70407fa0,
+        inactive_workspace      = 0x404055a0,
+        active_workspace_font   = 0xffffffa0,
+        inactive_workspace_font = 0xcccccca0,
     },
 
     -- format: {side, hook, function}
