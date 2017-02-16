@@ -2,7 +2,7 @@ require("libwaveform")
 require("math")
 
 -- standard colors (RGBA)
-bg = 0x404055ff
+bg = 0x404055c0
 fg = 0xffffffff
 
 -- return table when an error occurs
