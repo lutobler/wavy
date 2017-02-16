@@ -44,10 +44,10 @@ bar = {
 
     colors = {
         background              = 0x282828a0,
-        active_workspace        = 0x70407fa0,
-        inactive_workspace      = 0x404055a0,
-        active_workspace_font   = 0xffffffa0,
-        inactive_workspace_font = 0xcccccca0,
+        active_workspace        = 0x70407fc0,
+        inactive_workspace      = 0x404055c0,
+        active_workspace_font   = 0xffffffff,
+        inactive_workspace_font = 0xccccccff,
     },
 
     -- format: {side, hook, function}
