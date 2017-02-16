@@ -52,4 +52,4 @@ target_link_libraries(wavy
     wavy-protocols
 )
 
-add_library(waveform SHARED src/lib/waveform.c)
+add_library(waveform SHARED src/waveform.c)
