@@ -224,11 +224,12 @@ void update_bar(struct output *out) {
         }
         alloc_bar(out);
         out->bar.dirty = false;
-    } else {
-        // memory needs to be zero'd for transparency to work properly
-        size_t buf_s = 4 * out->bar.g.size.w * out->bar.g.size.h;
-        memset(out->bar.buffer, 0x0, buf_s);
     }
+
+    // when drawing over other stuff, replace the destination layer.
+    // this means transparent elements like background/workspace aren't
+    // composed, the color/transparency of the last drawn layer is applied.
+    cairo_set_operator(out->bar.cr, CAIRO_OPERATOR_SOURCE);
 
     // background
     cr_set_argb_color(out->bar.cr, config->statusbar_bg_color);
