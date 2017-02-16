@@ -16,6 +16,7 @@ Dependencies:
 - xwayland
 - xkbcommon
 - cairo
+- pango
 - lua (5.3)
 
 Build steps:
