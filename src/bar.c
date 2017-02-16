@@ -194,13 +194,12 @@ static void draw_data(struct bar_t *bar) {
 }
 
 static void alloc_bar(struct output *out) {
-    int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
-            out->g.size.w);
-    out->bar.buffer = calloc(stride * out->g.size.h, sizeof(unsigned char));
+    int stride = 4 * out->bar.g.size.w;
+    out->bar.buffer = calloc(stride * out->bar.g.size.h, sizeof(unsigned char));
     out->bar.surface = cairo_image_surface_create_for_data(out->bar.buffer,
                                                         CAIRO_FORMAT_ARGB32,
-                                                        out->g.size.w,
-                                                        out->g.size.h,
+                                                        out->bar.g.size.w,
+                                                        out->bar.g.size.h,
                                                         stride);
     out->bar.cr = cairo_create(out->bar.surface);
 }
@@ -216,11 +215,17 @@ void update_bar(struct output *out) {
                                 out->g.size.h;
         out->bar.g.size.w = out->g.size.w;
         out->bar.g.size.h = config->statusbar_height;
-        free(out->bar.buffer);
+        if (out->bar.buffer) {
+            free(out->bar.buffer);
+        }
         cairo_surface_destroy(out->bar.surface);
         cairo_destroy(out->bar.cr);
         alloc_bar(out);
         out->bar.dirty = false;
+    } else {
+        // memory needs to be zero'd for transparency to work properly
+        size_t buf_s = 4 * out->bar.g.size.w * out->bar.g.size.h;
+        memset(out->bar.buffer, 0x0, buf_s);
     }
 
     // background
@@ -282,7 +287,7 @@ void init_bar_threads() {
 void init_bar(struct output *out) {
     out->bar.dirty = true;
     pthread_mutex_init(&out->bar.draw_lock, NULL);
-    alloc_bar(out);
+    update_bar(out);
 
     // trigger all the hooks once on initialization. use a separate thread
     // so startup isn't blocked by a slow script.
