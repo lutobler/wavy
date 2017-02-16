@@ -1280,20 +1280,22 @@ void workspace_add() {
     wlc_output_schedule_render(active_output->output_handle);
 }
 
-void workspace_next() {
-    if (active_output->active_ws->number == workspaces->length) {
-        return;
-    }
-    wavy_log(LOG_DEBUG, "Selecting the next workspace");
-    workspace_switch_to(active_output->active_ws->number + 1);
-}
+// next: 1 := next, 0 := previous
+void cycle_workspace(uint32_t next) {
+    int32_t len = workspaces->length;
+    int32_t step = next ? 1 : -1;
+    int32_t cur_num = active_output->active_ws->number;
+    int32_t next_num;
 
-void workspace_prev() {
-    if (active_output->active_ws->number == 0) {
-        return;
+    if (cur_num + step < 0) {
+        next_num = ((cur_num + step) + len) % len;
+    } else {
+        next_num = (cur_num + step) % len;
     }
-    wavy_log(LOG_DEBUG, "Selecting the previous workspace");
-    workspace_switch_to(active_output->active_ws->number - 1);
+
+    wavy_log(LOG_DEBUG, "Selecting the %s workspace",
+            next ? "next" : "previous");
+    workspace_switch_to(next_num);
 }
 
 void cycle_tiling_mode() {
@@ -1302,15 +1304,15 @@ void cycle_tiling_mode() {
     frame_redraw(fr, false);
 }
 
-// fwd: 1 := forward, 0 := backward
-void cycle_view_in_frame(uint32_t fwd) {
+// next: 1 := next, 0 := previous
+void cycle_view_in_frame(uint32_t next) {
     struct frame *fr = get_active_frame();
     uint32_t len = fr->children->length;
     if (len == 0) {
         return;
     }
 
-    int32_t step = fwd ? 1 : -1;
+    int32_t step = next ? 1 : -1;
     int32_t cur_index = frame_get_index_of_view(fr, fr->active_view);
     int32_t next_index;
 

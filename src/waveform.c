@@ -129,15 +129,17 @@ static int register_spawn_cmd(lua_State *L) {
     return 1;
 }
 
-static int register_next_workspace_cmd(lua_State *L) {
-    check_argc(L, 2, "kb_next_workspace");
-    cmd_update(get_mod(L), get_sym(L), kb_null, next_workspace_cmd);
-    return 1;
-}
-
-static int register_prev_workspace_cmd(lua_State *L) {
-    check_argc(L, 2, "kb_prev_workspace");
-    cmd_update(get_mod(L), get_sym(L), kb_null, prev_workspace_cmd);
+static int register_cycle_workspace_cmd(lua_State *L) {
+    check_argc(L, 3, "kb_cylce_workspace");
+    luaL_checktype(L, 3, LUA_TSTRING);
+    const char *next_bkwd = lua_tostring(L, 3);
+    struct keybind_arg_t kba = kb_null;
+    if (!strcmp(next_bkwd, "previous")) {
+        kba.num = 0;
+    } else { // default to next
+        kba.num = 1;
+    }
+    cmd_update(get_mod(L), get_sym(L), kba, cycle_workspace_cmd);
     return 1;
 }
 
@@ -194,11 +196,11 @@ static int register_cycle_tiling_mode_cmd(lua_State *L) {
 static int register_cycle_view_cmd(lua_State *L) {
     check_argc(L, 3, "kb_cylce_view");
     luaL_checktype(L, 3, LUA_TSTRING);
-    const char *fwd_bkwd = lua_tostring(L, 3);
+    const char *next_bkwd = lua_tostring(L, 3);
     struct keybind_arg_t kba = kb_null;
-    if (!strcmp(fwd_bkwd, "backward")) {
+    if (!strcmp(next_bkwd, "previous")) {
         kba.num = 0;
-    } else { // default to forward
+    } else { // default to next
         kba.num = 1;
     }
     cmd_update(get_mod(L), get_sym(L), kba, cycle_view_cmd);
@@ -273,8 +275,7 @@ int luaopen_libwaveform(lua_State *L) {
     lua_register(L, "kb_exit", register_exit_cmd);
     lua_register(L, "kb_lua", register_lua_cmd);
     lua_register(L, "kb_spawn", register_spawn_cmd);
-    lua_register(L, "kb_next_workspace", register_next_workspace_cmd);
-    lua_register(L, "kb_prev_workspace", register_prev_workspace_cmd);
+    lua_register(L, "kb_cycle_workspace", register_cycle_workspace_cmd);
     lua_register(L, "kb_new_frame_right", register_new_frame_right_cmd);
     lua_register(L, "kb_new_frame_down", register_new_frame_down_cmd);
     lua_register(L, "kb_select", register_select_cmd);

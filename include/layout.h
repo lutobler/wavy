@@ -168,11 +168,8 @@ void move_to_workspace(uint32_t num);
 // Add a new workspace, but don't switch to it.
 void workspace_add();
 
-// Select the next workspace.
-void workspace_next();
-
-// Select the previous workspace.
-void workspace_prev();
+// Cylce through workspaces
+void cycle_workspace(uint32_t next);
 
 // Cycles through the view tiling modes.
 void cycle_tiling_mode();

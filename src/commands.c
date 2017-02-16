@@ -83,14 +83,9 @@ void switch_workspace_cmd(struct keybind_t *kb, wlc_handle view) {
     workspace_switch_to(kb->args.num - 1);
 }
 
-void prev_workspace_cmd(struct keybind_t *kb, wlc_handle view) {
-    (void) view; (void) kb;
-    workspace_prev();
-}
-
-void next_workspace_cmd(struct keybind_t *kb, wlc_handle view) {
-    (void) view; (void) kb;
-    workspace_next();
+void cycle_workspace_cmd(struct keybind_t *kb, wlc_handle view) {
+    (void) view;
+    cycle_workspace(kb->args.num);
 }
 
 void move_to_ws_cmd(struct keybind_t *kb, wlc_handle view) {

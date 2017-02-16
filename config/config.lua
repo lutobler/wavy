@@ -108,8 +108,8 @@ kb_close_view({modkey}, "q")
 kb_cycle_tiling_mode({modkey}, "space")
 
 -- cycle through the views inside a frame
-kb_cycle_view({modkey}, "tab", "forward")
-kb_cycle_view({modkey, "shift"}, "tab", "backward")
+kb_cycle_view({modkey}, "tab", "next")
+kb_cycle_view({modkey, "shift"}, "tab", "previous")
 
 -- select views/frame via arrow keys
 kb_select({modkey}, "h", "left")
@@ -133,8 +133,8 @@ kb_resize({"alt"}, "k", "up", 0.05)
 kb_resize({"alt"}, "l", "right", 0.05)
 
 -- workspaces
-kb_next_workspace({modkey}, "period")
-kb_prev_workspace({modkey}, "comma")
+kb_cycle_workspace({modkey}, "period", "next")
+kb_cycle_workspace({modkey}, "comma", "previous")
 kb_add_workspace({modkey}, "plus")
 
 ws_keys = {"1", "2", "3", "4", "5", "6", "7", "8", "9"}
