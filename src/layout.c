@@ -1208,6 +1208,10 @@ void focus_view(wlc_handle view) {
 }
 
 void move_direction(enum direction_t dir) {
+    if (!get_active_view()) { // do nothing when there is no view
+        return;
+    }
+
     struct frame *fr = get_active_frame();
     wlc_handle adj_view = find_adjacent_view(fr, dir);
 
