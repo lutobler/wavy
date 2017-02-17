@@ -1,8 +1,9 @@
 package.path = os.getenv("HOME") .. "/.config/wavy/?.lua;" .. package.path
 package.cpath = "/home/luke/wavy/?.so;" .. package.cpath
-require("utils")
+utils = require("wavy_utils")
 
--- color format: 32 bit integer, RGBA (red, green, blue, alpha)
+-- [[ WAVY CONFIGURATION ]] --
+
 config = {
     frame_gaps_size                     = 0,
     frame_border_size                   = 0,
@@ -16,31 +17,29 @@ config = {
     view_border_active_color            = 0x4897cfff,
     view_border_inactive_color          = 0x475b74ff,
 
-    wallpaper                           = "/home/luke/wp.png"
+    wallpaper                           = "~/wavy/assets/wavy_wallpaper.png"
 }
 
--- layouts: vertical, horizontal, grid, fullscreen, fibonacci
 layouts = {
-    {"vertical",    "[-]"},
-    {"horizontal",  "[|]"},
-    {"grid",        "[+]"},
-    {"fullscreen",  "[ ]"},
-    {"fibonacci",   "[@]"}
+    {"vertical",   "[-]"},
+    {"horizontal", "[|]"},
+    {"grid",       "[+]"},
+    {"fullscreen", "[ ]"},
+    {"fibonacci",  "[@]"}
 }
 
--- commands executed at startup.
 autostart = {
     {"xrdb", "$HOME/.Xresources"},
-    {"redshift", "-m", "wayland"}
 }
 
 --[[ STATUSBAR ]]--
+
 bar = {
     height      = 18,
-    font        = "Terminess Powerline 9",
-    gap         = 4,        -- between entries
-    padding     = 10,       -- inside entry box
-    position    = "top",    -- bottom, top
+    font        = "monospace 10",
+    gap         = 4,                            -- gap between elements
+    padding     = 10,                           -- padding around text
+    position    = "top",                        -- top, bottom
 
     colors = {
         background              = 0x282828a0,
@@ -50,57 +49,43 @@ bar = {
         inactive_workspace_font = 0xccccccff,
     },
 
-    -- format: {side, hook, function}
-    -- hook: hook_periodic_slow, hook_periodic_fast, hook_view_update, hook_user
-    -- side: right, left
-    -- function: see utils.lua
     widgets = {
-        {"right", "hook_periodic_slow", time},
-        {"right", "hook_periodic_slow", battery},
-        {"right", "hook_user",          volume},
-        {"right", "hook_user",          brt},
-        {"right", "hook_periodic_slow", wifi},
+        {"right", "hook_periodic_slow", utils.time},
+        {"right", "hook_periodic_slow", utils.battery},
+        {"right", "hook_user",          utils.volume},
+        {"right", "hook_user",          utils.brt},
+        {"right", "hook_periodic_slow", utils.wifi},
         {"right", "hook_periodic_slow", function()
-                                            return net_device("wlp4s0")
+                                            return utils.net_device("wlp4s0")
                                         end},
-        {"right", "hook_periodic_slow", fs_used},
-        {"right", "hook_periodic_slow", kernel},
-        {"left",  "hook_view_update",   tiling_symbol},
-        {"left",  "hook_view_update",   view_title},
+        {"right", "hook_periodic_slow", utils.fs_used},
+        {"right", "hook_periodic_slow", utils.kernel},
+        {"left",  "hook_view_update",   utils.tiling_symbol},
+        {"left",  "hook_view_update",   utils.view_title},
     }
 }
 
 --[[ KEYBINDINGS ]]--
--- availabe modifiers: shift, super, alt, ctrl, caps, mod2, mod3, mod5
-m = os.getenv("WAVY_MOD")
-if m then
-    modkey = m
-else
-    modkey = "ctrl"
+-- modifiers: shift, super, alt, ctrl, caps, mod2, mod3, mod5
+
+modkey = "super"
+dmenu = {"dmenu_run"}
+
+terminal = os.getenv("TERMINAL")
+if not terminal then
+    terminal = "urxvt"
 end
 
-qt_wl = "QT_QPA_PLATFORM=wayland-egl "
-qt_dec = "QT_WAYLAND_DISABLE_WINDOWDECORATION=1 "
-
--- using a shell so env variables work
-qb = {qt_wl .. qt_dec .. "qutebrowser", "--backend", "webengine"}
-dmenu = {"dmenu_run", "-b", "-fn", "\'Terminess Powerline-12:Regular\'", "-p", "\'>>>\'"}
-
 -- application shortcuts
-kb_spawn({modkey, "shift"}, "Return", {"xterm"})
-kb_spawn({modkey}, "Return", {"urxvt"})
-kb_spawn({modkey}, "u", dmenu)
-kb_spawn({modkey}, "m", qb)
-kb_spawn({modkey}, "n", {"telegram-desktop"})
+kb_spawn({modkey}, "Return", {terminal})
+kb_spawn({modkey}, "d", dmenu)
 
 -- bindings to lua functions
-kb_lua({}, "XF86AudioRaiseVolume", function() pulsecontrol("up", 5) end)
-kb_lua({}, "XF86AudioLowerVolume", function() pulsecontrol("down", 5) end)
-kb_lua({}, "XF86AudioMute", function() pulsecontrol("mute") end)
-kb_lua({}, "XF86MonBrightnessUp", function() brtcontrol("up") end)
-kb_lua({}, "XF86MonBrightnessDown", function() brtcontrol("down") end)
-kb_lua({modkey, "alt"}, "j", function() brtcontrol("down") end)
-kb_lua({modkey, "alt"}, "k", function() brtcontrol("up") end)
+kb_lua({}, "XF86AudioRaiseVolume",  function() utils.pulsecontrol("up", 5) end)
+kb_lua({}, "XF86AudioLowerVolume",  function() utils.pulsecontrol("down", 5) end)
+kb_lua({}, "XF86AudioMute",         function() utils.pulsecontrol("mute") end)
+kb_lua({}, "XF86MonBrightnessUp",   function() utils.brtcontrol("up") end)
+kb_lua({}, "XF86MonBrightnessDown", function() utils.brtcontrol("down") end)
 
 -- window managing basics
 kb_exit({modkey, "shift"}, "e")
