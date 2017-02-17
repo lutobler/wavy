@@ -1,12 +1,14 @@
 require("libwaveform")
 require("math")
 
+local utils = {}
+
 -- standard colors (RGBA)
-bg = 0x404055c0
-fg = 0xffffffff
+local bg = 0x404055c0
+local fg = 0xffffffff
 
 -- return table when an error occurs
-null = {0, 0, ""}
+local null = {0, 0, ""}
 
 -- execute a shell command and return its result
 function exec(cmd)
@@ -14,7 +16,7 @@ function exec(cmd)
     if not r then
         return ""
     end
-    s = r:read()
+    local s = r:read()
     r:close()
     if s then
         return s
@@ -23,21 +25,21 @@ function exec(cmd)
     end
 end
 
-function view_title()
+function utils.view_title()
     return {bg, fg, get_view_title()}
 end
 
-function tiling_symbol()
+function utils.tiling_symbol()
     return {bg, fg, get_tiling_symbol()}
 end
 
 -- see "man strftime" for format strings.
-function time()
+function utils.time()
     return {bg, fg, os.date("%a %b %d %Y %H:%M")}
 end
 
 -- battery might be in "BAT0" aswell.
-function battery(arg)
+function utils.battery(arg)
     local f_cap = io.open("/sys/class/power_supply/BAT1/capacity", "r")
     local f_stat = io.open("/sys/class/power_supply/BAT1/status", "r")
     if f_cap and f_stat then
@@ -64,7 +66,7 @@ function battery(arg)
                 end
                 r = 0xff
             end
-            _bg =  (((r << 8) | g) << 16) | 0xff
+            _bg =  (((r << 8) | g) << 16) | 0x90
             r = {_bg, bg, str}
         else
             r = {bg, fg, str}
@@ -80,18 +82,18 @@ function battery(arg)
     end
 end
 
-function fs_used()
+function utils.fs_used()
     local fs_used = exec("df --output=pcent -h / | tail -n1")
     local str = "Disk: /" .. fs_used .. " used"
     return {bg, fg, str}
 end
 
-function kernel()
+function utils.kernel()
     local str = "Linux: " .. exec("uname -r")
     return {bg, fg, str}
 end
 
-function net_device(dev)
+function utils.net_device(dev)
     local cmd = [[ ip addr show dev ]] .. dev
                 .. [[| grep -o -m1 inet\ [0-9\.]* ]]
                 .. [[ | cut -d ' ' -f 2 ]]
@@ -105,7 +107,7 @@ function net_device(dev)
     end
 end
 
-function wifi()
+function utils.wifi()
     local cmd = [[ nmcli device show wlp4s0 ]]
                 .. [[ | grep -o GENERAL\.CONNECTION\ *.* ]]
                 .. [[ | cut -d ':' -f2 ]]
@@ -120,18 +122,18 @@ function wifi()
     end
 end
 
-function volume()
-    mute = [[ pamixer --get-mute ]]
+function utils.volume()
+    local mute = [[ pamixer --get-mute ]]
     if exec(mute) == "true" then
         return {bg, fg, "Vol: muted"}
     end
 
-    vol = [[ pamixer --get-volume ]]
+    local vol = [[ pamixer --get-volume ]]
     local str = "Vol " .. exec(vol) .. "%"
     return {bg, fg, str}
 end
 
-function pulsecontrol(action, change)
+function utils.pulsecontrol(action, change)
     if action == "up" then
         cmd = [[ pamixer -i ]] .. change
     elseif action == "down" then
@@ -149,14 +151,14 @@ function pulsecontrol(action, change)
     trigger_hook("hook_user")
 end
 
-function brt()
-    cmd = [[ light -G | xargs printf "%.0f\n" ]]
+function utils.brt()
+    local cmd = [[ light -G | xargs printf "%.0f\n" ]]
     local str = "Screen: " .. exec(cmd) .. "%"
     return {bg, fg, str}
 end
 
-function brtcontrol(action)
-    cur_cmd = [[ light -G | xargs printf "%.0f\n" ]]
+function utils.brtcontrol(action)
+    local cur_cmd = [[ light -G | xargs printf "%.0f\n" ]]
     local cur = tonumber(exec(cmd))
 
     if action == "up" and cur >= 20 then
@@ -177,3 +179,5 @@ function brtcontrol(action)
     end
     trigger_hook("hook_user")
 end
+
+return utils
