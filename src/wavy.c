@@ -16,24 +16,27 @@
 static const char *wavy_version = "wavy version: 0.0.1\n";
 bool debug_enabled = false;
 bool wlc_output_enabled = true;
+char *cmdline_config_file = NULL;
 
 int main(int argc, char **argv) {
     const char *usage =
         "Usage: wavy [options]\n"
         "\n"
-        "  -h, --help           Print this message and exit.\n"
-        "  -v, --version        Print version information and exit.\n"
-        "  -d  --debug          Enable additional debug output.\n"
-        "  -W  --no-wlc-output  Disable output from wlc.\n"
+        "  -h,          --help           Print this message and exit\n"
+        "  -v,          --version        Print version information and exit\n"
+        "  -d           --debug          Enable additional debug output\n"
+        "  -W           --no-wlc-output  Disable output from wlc\n"
+        "  -c <file>    --config <file>  Select a config file\n"
         "\n";
 
-    const char *optstring = "hvdW";
+    const char *optstring = "hvdWc:";
 
     const struct option long_options[] = {
         {"help",            no_argument,        NULL, 'h'},
         {"version",         no_argument,        NULL, 'v'},
         {"debug",           no_argument,        NULL, 'd'},
         {"no-wlc-output",   no_argument,        NULL, 'W'},
+        {"config",          required_argument,  NULL, 'c'},
         {0, 0, 0, 0}
     };
 
@@ -59,6 +62,9 @@ int main(int argc, char **argv) {
             break;
         case 'W':
             wlc_output_enabled = false;
+            break;
+        case 'c':
+            cmdline_config_file = optarg;
             break;
         default:
             fprintf(stderr, "%s", usage);

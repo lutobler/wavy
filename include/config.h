@@ -58,6 +58,8 @@ struct wavy_config_t {
     struct vector_t *autostart;
 };
 
+extern char *cmdline_config_file;
+
 void init_config();
 void free_config();
 

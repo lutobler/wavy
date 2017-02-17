@@ -244,6 +244,11 @@ static void read_config(lua_State *L) {
 
     set_conf_str(L, "wallpaper", &config->wallpaper, 1);
 
+    // expand file path
+    wordexp_t f;
+    wordexp(config->wallpaper, &f, 0);
+    config->wallpaper = f.we_wordv[0];
+
     set_layouts(L);
     set_autostart(L);
     lua_pop(L, 1);
@@ -258,7 +263,13 @@ static char *get_config_file_path() {
     char *c_file = NULL;
     for (uint32_t i = 0; i < 2; i++) {
         wordexp_t f;
-        if (wordexp(files[i], &f, 0) == 0) {
+        const char *file;
+        if (cmdline_config_file && (i == 1)) {
+            file = cmdline_config_file;
+        } else {
+            file = files[i];
+        }
+        if (wordexp(file, &f, 0) == 0) {
             if (access(f.we_wordv[0], F_OK) == 0) {
                 c_file = strdup(f.we_wordv[0]);
                 break;
