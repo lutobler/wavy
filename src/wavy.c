@@ -22,11 +22,11 @@ int main(int argc, char **argv) {
     const char *usage =
         "Usage: wavy [options]\n"
         "\n"
-        "  -h,          --help           Print this message and exit\n"
-        "  -v,          --version        Print version information and exit\n"
-        "  -d           --debug          Enable additional debug output\n"
-        "  -W           --no-wlc-output  Disable output from wlc\n"
-        "  -c <file>    --config <file>  Select a config file\n"
+        "  -h,          --help              Print this message and exit\n"
+        "  -v,          --version           Print version information and exit\n"
+        "  -d           --debug             Enable additional debug output\n"
+        "  -W           --no-wlc-output     Disable output from wlc\n"
+        "  -c <file>    --config <file>     Select a config file\n"
         "\n";
 
     const char *optstring = "hvdWc:";
