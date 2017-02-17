@@ -177,8 +177,6 @@ void cycle_tiling_mode();
 // Cycles the focus through the list of views in the currently active frame.
 void cycle_view_in_frame();
 
-void print_frame_tree();
-
 void free_all_outputs();
 void free_workspaces();
 

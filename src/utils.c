@@ -11,6 +11,7 @@
 #include "bar.h"
 #include "utils.h"
 #include "log.h"
+#include "layout.h"
 
 void cr_set_argb_color(cairo_t *cr, uint32_t rgba) {
     cairo_set_source_rgba(cr, (double) ((rgba >> 8)  & 0xff) / 255.0,
@@ -111,4 +112,44 @@ void cmd_exec(const char *bin, char *const *args) {
         wavy_log(LOG_ERROR, "Failed to fork for \'%s\'", bin);
     }
     free(cmd);
+}
+
+// internal recursive function that prints the frame tree
+static void _print_frame_tree(struct frame *fr, int indent) {
+    if (fr) {
+        if (fr->right) {
+            _print_frame_tree(fr->right, indent + 4);
+        }
+        if (indent) {
+            for (int i=0; i<indent; i++) {
+                printf(" ");
+            }
+        }
+        if (fr->right) {
+            printf(" /\n");
+            for (int i=0; i<indent; i++) {
+                printf(" ");
+            }
+        }
+        if (fr->split == SPLIT_HORIZONTAL) {
+            printf("H (%p)\n", (void *) fr);
+        } else if (fr->split == SPLIT_VERTICAL) {
+            printf("V (%p)\n", (void *) fr);
+        } else {
+            printf("(%p)\n", (void *) fr);
+        }
+        if (fr->left) {
+            for (int i=0; i<indent; i++) {
+                printf(" ");
+            }
+            printf(" \\\n");
+            _print_frame_tree(fr->left, indent + 4);
+        }
+    }
+}
+
+void print_frame_tree(struct frame *fr) {
+    printf("\nCurrent frame tree (printed sideways): \n\n");
+    _print_frame_tree(fr, 0);
+    printf("\n");
 }

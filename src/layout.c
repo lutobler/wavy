@@ -13,6 +13,7 @@
 #include "vector.h"
 #include "border.h"
 #include "bar.h"
+#include "utils.h"
 
 // find the index of a view in a frame
 static uint32_t frame_get_index_of_view(struct frame *fr, wlc_handle view) {
@@ -1340,46 +1341,6 @@ void cycle_view_in_frame(uint32_t next) {
     wlc_view_focus(fr->active_view);
     frame_redraw(fr, false);
     wlc_output_schedule_render(active_output->output_handle);
-}
-
-// internal recursive function that prints the frame tree
-static void _print_frame_tree(struct frame *fr, int indent) {
-    if (fr) {
-        if (fr->right) {
-            _print_frame_tree(fr->right, indent + 4);
-        }
-        if (indent) {
-            for (int i=0; i<indent; i++) {
-                printf(" ");
-            }
-        }
-        if (fr->right) {
-            printf(" /\n");
-            for (int i=0; i<indent; i++) {
-                printf(" ");
-            }
-        }
-        if (fr->split == SPLIT_HORIZONTAL) {
-            printf("H (%p)\n", (void *) fr);
-        } else if (fr->split == SPLIT_VERTICAL) {
-            printf("V (%p)\n", (void *) fr);
-        } else {
-            printf("(%p)\n", (void *) fr);
-        }
-        if (fr->left) {
-            for (int i=0; i<indent; i++) {
-                printf(" ");
-            }
-            printf(" \\\n");
-            _print_frame_tree(fr->left, indent + 4);
-        }
-    }
-}
-
-void print_frame_tree(struct frame *fr) {
-    printf("\nCurrent frame tree (printed sideways): \n\n");
-    _print_frame_tree(fr, 0);
-    printf("\n");
 }
 
 void free_all_outputs() {
