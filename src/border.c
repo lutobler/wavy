@@ -25,12 +25,12 @@ static void draw_border_rectangle(cairo_t *cr, uint32_t size,
     cairo_fill(cr);
 
     // top border
-    cairo_rectangle(cr, x_off + size, y_off, g->size.w - size, size);
+    cairo_rectangle(cr, x_off + size, y_off, g->size.w - 2*size, size);
     cairo_fill(cr);
 
     // bottom border
     cairo_rectangle(cr, x_off + size, y_off + g->size.h - size,
-            g->size.w - size, size);
+            g->size.w - 2*size, size);
     cairo_fill(cr);
 }
 
