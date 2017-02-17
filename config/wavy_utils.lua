@@ -159,7 +159,7 @@ end
 
 function utils.brtcontrol(action)
     local cur_cmd = [[ light -G | xargs printf "%.0f\n" ]]
-    local cur = tonumber(exec(cmd))
+    local cur = tonumber(exec(cur_cmd))
 
     if action == "up" and cur >= 20 then
         cmd = [[ light -A 5 ]]
