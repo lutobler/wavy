@@ -1008,6 +1008,15 @@ void child_delete(wlc_handle view) {
         struct frame *fr = frame_by_view_global(view);
         uint32_t i = frame_get_index_of_view(fr, view);
         next_view = fr->active_view; // keep the same active view
+
+        // if the deleted view was the active one in the target frame, the
+        // active view view needs to be changed
+        if (fr->active_view == view) {
+            fr->active_view = fr->children->length == 1 ? 0 :
+                              (i > 0) ? frame_get_view_i(fr, i - 1) :
+                              frame_get_view_i(fr, 1);
+        }
+
         vector_del(fr->children, i);
         frame_redraw(fr, false);
     }
