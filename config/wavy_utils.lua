@@ -4,7 +4,7 @@ require("math")
 local utils = {}
 
 -- standard colors (RGBA)
-local bg = 0x404055c0
+local bg = 0x404055e8
 local fg = 0xffffffff
 
 -- return table when an error occurs
