@@ -17,16 +17,20 @@ static void *set_wallpaper(unsigned char *buf, cairo_surface_t *cs) {
         return NULL;
     }
 
+    uint32_t width = cairo_image_surface_get_width(cs);
+    uint32_t height = cairo_image_surface_get_height(cs);
+
     void *shm_data = NULL;
     struct wl_surface *surface = wl_compositor_create_surface(reg->compositor);
-    struct wl_buffer *buffer = create_shm_buffer(reg->shm, 1920, 1080,
+    struct wl_buffer *buffer = create_shm_buffer(reg->shm, width, height,
             &shm_data);
 
-    memcpy(shm_data, buf, 1920 * 1080 * 4);
-    create_window(surface, buffer, 1920, 1080);
+    memcpy(shm_data, buf, width * height * 4);
+    create_window(surface, buffer, width, height);
 
-    for (uint32_t i = 0; i < reg->outputs->length; i++) {
-        struct wl_output *o = reg->outputs->items[i];
+    for (uint32_t i = 0; i < reg->wl_outputs->length; i++) {
+        struct wl_output_state *state = reg->wl_outputs->items[i];
+        struct wl_output *o = state->output;
         background_set_background(reg->background, o, surface);
     }
 

@@ -10,6 +10,55 @@
 #include "log.h"
 #include "vector.h"
 
+static void display_handle_geometry(void *data, struct wl_output *wl_output,
+        int32_t x, int32_t y, int32_t physical_width, int32_t physical_height,
+        int32_t subpixel, const char *make, const char *model,
+        int32_t transform) {
+    (void) data; (void) wl_output; (void) x; (void) y; (void) physical_width;
+    (void) physical_height; (void) subpixel; (void) make; (void) model;
+    (void) transform;
+    // Intentionally left blank
+}
+
+static void display_handle_mode(void *data, struct wl_output *wl_output,
+        uint32_t flags, int32_t width, int32_t height, int32_t refresh) {
+
+    (void) wl_output;
+    (void) refresh;
+    struct wl_output_state *state = data;
+    if (flags & WL_OUTPUT_MODE_CURRENT) {
+        state->flags = flags;
+        state->width = width;
+        state->height = height;
+        wavy_log(LOG_DEBUG, "Got mode %dx%x:0x%X for output %p",
+                width, height, flags, data);
+    }
+}
+
+static void display_handle_done(void *data, struct wl_output *wl_output) {
+    (void) data;
+    (void) wl_output;
+    // Intentionally left blank
+}
+
+static void display_handle_scale(void *data, struct wl_output *wl_output,
+        int32_t scale) {
+
+    (void) wl_output;
+
+    struct wl_output_state *state = data;
+    state->scale = scale;
+    wavy_log(LOG_DEBUG, "Got scale factor %d for output %p", scale, data);
+}
+
+
+static const struct wl_output_listener output_listener = {
+   .geometry = display_handle_geometry,
+   .mode = display_handle_mode,
+   .done = display_handle_done,
+   .scale = display_handle_scale
+};
+
 static void registry_global(void *data, struct wl_registry *registry,
 		uint32_t id, const char *interface, uint32_t version) {
 
@@ -21,9 +70,12 @@ static void registry_global(void *data, struct wl_registry *registry,
     } else if (strcmp(interface, "wl_shm") == 0) {
 		reg->shm = wl_registry_bind(registry, id, &wl_shm_interface, version);
     } else if (strcmp(interface, "wl_output") == 0) {
-        struct wl_output *out = wl_registry_bind(registry, id,
+        struct wl_output_state *state = malloc(sizeof(struct wl_output_state));
+        state->output = wl_registry_bind(registry, id,
                 &wl_output_interface, version);
-        vector_add(reg->outputs, out);
+        state->scale = 1;
+        vector_add(reg->wl_outputs, state);
+        wl_output_add_listener(state->output, &output_listener, state);
     } else if (strcmp(interface, "wl_shell") == 0) {
         reg->shell = wl_registry_bind(registry, id,
                 &wl_shell_interface, version);
@@ -53,7 +105,7 @@ struct registry *registry_poll() {
         return NULL;
     }
 
-    reg->outputs = vector_init();
+    reg->wl_outputs = vector_init();
 
     reg->display = wl_display_connect(NULL);
     if (!reg->display) {
@@ -71,6 +123,11 @@ struct registry *registry_poll() {
     return reg;
 }
 
+static void destroy_outpus(void *_state) {
+    struct wl_output_state *state = _state;
+    wl_output_destroy(state->output);
+}
+
 void free_registry(struct registry *reg) {
     if (reg->compositor) {
         wl_compositor_destroy(reg->compositor);
@@ -81,8 +138,9 @@ void free_registry(struct registry *reg) {
     if (reg->shm) {
         wl_shm_destroy(reg->shm);
     }
-    if (reg->outputs) {
-        vector_free(reg->outputs);
+    if (reg->wl_outputs) {
+        vector_foreach(reg->wl_outputs, destroy_outpus);
+        vector_free(reg->wl_outputs);
     }
     free(reg);
 }

@@ -8,8 +8,16 @@ struct registry {
     struct wl_display *display;
     struct wl_shm *shm;
     struct wl_shell *shell;
-    struct vector_t *outputs; // vector of struct wl_output *
     struct background *background;
+    struct vector_t *wl_outputs;
+};
+
+struct wl_output_state {
+    struct wl_output *output;
+    uint32_t flags;
+    int32_t width;
+    int32_t height;
+    int32_t scale;
 };
 
 struct registry *registry_poll();

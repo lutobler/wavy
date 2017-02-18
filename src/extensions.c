@@ -158,7 +158,6 @@ static void background_bind(struct wl_client *client, void *data,
 }
 
 void register_extensions(void) {
-    backgrounds = vector_init();
     wl_global_create(wlc_get_wl_display(), &background_interface, 1, NULL,
             background_bind);
     wl_global_create(wlc_get_wl_display(), &gamma_control_manager_interface, 1,
