@@ -6,6 +6,7 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include <libinput.h>
 
 #include "vector.h"
 
@@ -25,42 +26,54 @@ enum position_t {
 };
 
 struct wavy_config_t {
-    uint32_t statusbar_height;
-    char *statusbar_font;
-    uint32_t statusbar_gap;
-    uint32_t statusbar_padding;
-    enum position_t statusbar_position;
-    uint32_t statusbar_bg_color;
-    uint32_t statusbar_active_ws_color;
-    uint32_t statusbar_inactive_ws_color;
-    uint32_t statusbar_active_ws_font_color;
-    uint32_t statusbar_inactive_ws_font_color;
+    uint32_t    statusbar_height;
+    char        *statusbar_font;
+    uint32_t    statusbar_gap;
+    uint32_t    statusbar_padding;
+    enum        position_t statusbar_position;
+    uint32_t    statusbar_bg_color;
+    uint32_t    statusbar_active_ws_color;
+    uint32_t    statusbar_inactive_ws_color;
+    uint32_t    statusbar_active_ws_font_color;
+    uint32_t    statusbar_inactive_ws_font_color;
 
-    uint32_t frame_gaps_size;
-    uint32_t frame_border_size;
-    uint32_t frame_border_empty_size;
-    uint32_t frame_border_active_color;
-    uint32_t frame_border_inactive_color;
-    uint32_t frame_border_empty_active_color;
-    uint32_t frame_border_empty_inactive_color;
+    uint32_t    frame_gaps_size;
+    uint32_t    frame_border_size;
+    uint32_t    frame_border_empty_size;
+    uint32_t    frame_border_active_color;
+    uint32_t    frame_border_inactive_color;
+    uint32_t    frame_border_empty_active_color;
+    uint32_t    frame_border_empty_inactive_color;
 
-    uint32_t view_border_size;
-    uint32_t view_border_active_color;
-    uint32_t view_border_inactive_color;
+    uint32_t    view_border_size;
+    uint32_t    view_border_active_color;
+    uint32_t    view_border_inactive_color;
 
-    char *wallpaper; // file path
+    char        *wallpaper; // file path
 
-    enum auto_tile_t tile_layouts[5];
-    char *tile_layout_strs[5];
-    uint32_t num_layouts;
+    enum        auto_tile_t tile_layouts[5];
+    char        *tile_layout_strs[5];
+    uint32_t    num_layouts;
 
-    // vector of **char's
+    // **char's
     struct vector_t *autostart;
+
+    // *input_config's
+    struct vector_t *input_configs;
+};
+
+struct input_config {
+    const char *name;
+    int tap_state;
+    int scroll_method;
+    int accel_profile;
 };
 
 extern char *cmdline_config_file;
 
 void init_config();
 void free_config();
+void configure_input(struct libinput_device *device);
+void unconfigure_input(struct libinput_device *device);
 
 #endif

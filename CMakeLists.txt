@@ -43,6 +43,7 @@ target_link_libraries(wavy
     xkbcommon
     pthread
     lua
+    input
     gobject-2.0
     cairo
     pango-1.0

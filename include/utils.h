@@ -31,4 +31,7 @@ enum auto_tile_t tiling_layout_str_to_enum(const char *str);
 // a shell.
 void cmd_exec(const char *bin, char *const *args);
 
+// Print the tree of frames (sideways).
+void print_frame_tree(struct frame *fr);
+
 #endif

@@ -9,6 +9,7 @@
 #include <lauxlib.h>
 #include <wlc/wlc.h>
 #include <pthread.h>
+#include <libinput.h>
 
 #include "commands.h"
 #include "config.h"
@@ -77,6 +78,7 @@ static void set_conf_str(lua_State *L, const char *name, char **conf,
 
 static void set_layouts(lua_State *L) {
     if (lua_getglobal(L, "layouts") != LUA_TTABLE) {
+        lua_settop(L, 0);
         return;
     }
 
@@ -98,11 +100,12 @@ static void set_layouts(lua_State *L) {
             luaL_error(L, "Invalid entry in layouts subtable");
         }
     }
-    lua_pop(L, 1);
+    lua_settop(L, 0);
 }
 
 static void set_autostart(lua_State *L) {
     if (lua_getglobal(L, "autostart") != LUA_TTABLE) {
+        lua_settop(L, 0);
         return;
     }
 
@@ -114,6 +117,7 @@ static void set_autostart(lua_State *L) {
             lua_pop(L, 1);
         }
     }
+    lua_settop(L, 0);
 }
 
 static enum position_t pos_str_to_enum(const char *str) {
@@ -142,6 +146,7 @@ static enum side_t side_str_to_enum(const char *str) {
 
 static void bar_config(lua_State *L) {
     if (lua_getglobal(L, "bar") != LUA_TTABLE) {
+        lua_settop(L, 0);
         return;
     }
 
@@ -160,7 +165,6 @@ static void bar_config(lua_State *L) {
                 "Invalid bar position: Only \'top\', \'bottom\' are allowed");
         }
     }
-    lua_pop(L, 1);
 
     if (lua_getfield(L, bar_idx, "colors") == LUA_TTABLE) {
         int32_t colors = lua_gettop(L);
@@ -215,11 +219,12 @@ static void bar_config(lua_State *L) {
         }
         lua_pop(L, 1);
     }
-    lua_pop(L, 2);
+    lua_settop(L, 0);
 }
 
 static void read_config(lua_State *L) {
     if (lua_getglobal(L_config, "config") != LUA_TTABLE) {
+        lua_settop(L, 0);
         return;
     }
 
@@ -251,7 +256,7 @@ static void read_config(lua_State *L) {
 
     set_layouts(L);
     set_autostart(L);
-    lua_pop(L, 1);
+    lua_settop(L, 0);
 }
 
 static char *get_config_file_path() {
@@ -280,6 +285,96 @@ static char *get_config_file_path() {
     return c_file;
 }
 
+static void set_input_config(lua_State *L, int32_t idx,
+        struct input_config *ic) {
+
+    lua_pushnil(L);
+    while (lua_next(L, idx) != 0) {
+        if (!(lua_type(L, -2) == LUA_TSTRING)) {
+            luaL_error(L, "Input configuration option name must be a string");
+        }
+        if (!(lua_type(L, -1) == LUA_TSTRING)) {
+            luaL_error(L, "Input configuration option value must be a string");
+        }
+
+        const char *key = lua_tostring(L, -2);
+        const char *value = lua_tostring(L, -1);
+
+        if (!strcmp(key, "tap_to_click")) {
+            if (!strcmp(value, "enabled")) {
+                ic->tap_state = LIBINPUT_CONFIG_TAP_ENABLED;
+            } else if (!strcmp(value, "disabled")) {
+                ic->tap_state = LIBINPUT_CONFIG_TAP_DISABLED;
+            } else {
+                luaL_error(L, "Invalid option for \'tap_to_click\': %s", value);
+            }
+        } else if (!strcmp(key, "scroll_method")) {
+            if (!strcmp(value, "no scroll")) {
+                ic->scroll_method = LIBINPUT_CONFIG_SCROLL_NO_SCROLL;
+            } else if (!strcmp(value, "twofinger")) {
+                ic->scroll_method = LIBINPUT_CONFIG_SCROLL_2FG;
+            } else if (!strcmp(value, "edge")) {
+                ic->scroll_method = LIBINPUT_CONFIG_SCROLL_EDGE;
+            } else {
+                luaL_error(L, "Invalid option for \'scroll_method\': %s",
+                        value);
+            }
+        } else if (!strcmp(key, "acceleration_profile")) {
+            if (!strcmp(value, "flat")) {
+                ic->accel_profile = LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT;
+            } else if (!strcmp(value, "adaptive")) {
+                ic->accel_profile = LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE;
+            } else if (!strcmp(value, "none")) {
+                ic->accel_profile = LIBINPUT_CONFIG_ACCEL_PROFILE_NONE;
+            } else {
+                luaL_error(L, "Invalid option for \'acceleration_profile\': %s",
+                        value);
+            }
+        }
+
+        lua_pop(L, 1);
+    }
+    lua_settop(L, idx);
+}
+
+static void input_configs_init(lua_State *L) {
+    if (lua_getglobal(L, "input") != LUA_TTABLE) {
+        lua_settop(L, 0);
+        return;
+    }
+
+    uint32_t inputs = lua_gettop(L);
+    lua_pushnil(L);
+    while (lua_next(L, inputs) != 0) {
+        if (!(lua_type(L, -2) == LUA_TSTRING)) {
+            luaL_error(L, "Input device name must be a string");
+        }
+        if (!(lua_type(L, -1) == LUA_TTABLE)) {
+            luaL_error(L, "Input device configuration must be a table");
+        }
+
+        // initialize an empty input configuration
+        const char *dev_name = strdup(lua_tostring(L, -2));
+        struct input_config *ic = malloc(sizeof(struct input_config));
+        if (!ic) {
+            wavy_log(LOG_ERROR, "Failed to allocate input config");
+            continue;
+        }
+        vector_add(config->input_configs, ic);
+        ic->name = dev_name;
+
+        // INT_MIN signifies an unset variable
+        ic->tap_state = INT_MIN;
+        ic->scroll_method = INT_MIN;
+        ic->accel_profile = INT_MIN;
+
+        int32_t conf_table = lua_gettop(L);
+        set_input_config(L, conf_table, ic);
+        lua_pop(L, 1);
+    }
+    lua_settop(L, 0);
+}
+
 void init_config() {
     config = calloc(1, sizeof(struct wavy_config_t));
     if (!config) {
@@ -287,6 +382,7 @@ void init_config() {
         exit(EXIT_FAILURE);
     }
     config->autostart = vector_init();
+    config->input_configs = vector_init();
 
     const char *config_file = get_config_file_path();
     if (!config_file) {
@@ -316,10 +412,75 @@ void init_config() {
     default_config();
     read_config(L_config);
     bar_config(L_config);
+    input_configs_init(L_config);
     free((void *) config_file);
+}
+
+static void free_input_config(void *_ic) {
+    struct input_config *ic = _ic;
+    free((void *) ic->name);
+}
+
+// needs a terminating null pointer!
+static void free_char_char(void *_cc) {
+    char **cc = _cc;
+    int i;
+    char *c;
+    for (i = 0, c = *cc; c; i++, c = cc[i]) {
+        free(c);
+    }
+    free(cc);
 }
 
 void free_config() {
     lua_close(L_config);
+    vector_foreach(config->autostart, free_char_char);
+    vector_free(config->autostart);
+    vector_foreach(config->input_configs, free_input_config);
+    vector_free(config->input_configs);
     free(config);
+}
+
+static void apply_input_config(struct input_config *ic,
+        struct libinput_device *device) {
+
+    if (ic->tap_state != INT_MIN) {
+        wavy_log(LOG_DEBUG, "Set tap_enabled(%d) for \'%s\'",
+                ic->tap_state, ic->name);
+        libinput_device_config_tap_set_enabled(device, ic->tap_state);
+    }
+    if (ic->scroll_method != INT_MIN) {
+        wavy_log(LOG_DEBUG, "Set scroll_method(%d) for \'%s\'",
+                ic->scroll_method, ic->name);
+        libinput_device_config_scroll_set_method(device, ic->scroll_method);
+    }
+    if (ic->accel_profile != INT_MIN) {
+        wavy_log(LOG_DEBUG, "Set accel_profile(%d) for \'%s\'",
+                ic->accel_profile, ic->name);
+        libinput_device_config_accel_set_profile(device, ic->accel_profile);
+    }
+}
+
+void configure_input(struct libinput_device *device) {
+    const char *device_name = libinput_device_get_name(device);
+    for (uint32_t i = 0; i < config->input_configs->length; i++) {
+        struct input_config *ic = config->input_configs->items[i];
+        if (!strcmp(device_name, ic->name)) {
+            wavy_log(LOG_DEBUG, "Configuring device: \'%s\'", device_name);
+            apply_input_config(ic, device);
+        }
+    }
+}
+
+void unconfigure_input(struct libinput_device *device) {
+    const char *device_name = libinput_device_get_name(device);
+    for (uint32_t i = 0; i < config->input_configs->length; i++) {
+        struct input_config *ic = config->input_configs->items[i];
+        if (!strcmp(device_name, ic->name)) {
+            wavy_log(LOG_DEBUG, "Input device deleted: \'%s\'", device_name);
+            vector_del(config->input_configs, i);
+            free((void *) ic->name);
+            free(ic);
+        }
+    }
 }

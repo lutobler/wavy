@@ -185,6 +185,15 @@ static void wlc_log(enum wlc_log_type type, const char *str) {
     wavy_log(LOG_WLC, (char *) str);
 }
 
+static bool input_created(struct libinput_device *device) {
+    configure_input(device);
+    return true; // unused by wlc
+}
+
+static void input_destroyed(struct libinput_device *device) {
+    unconfigure_input(device);
+}
+
 void set_wlc_callbacks() {
     wlc_set_keyboard_key_cb(handle_key);
     wlc_set_view_created_cb(view_created);
@@ -200,4 +209,6 @@ void set_wlc_callbacks() {
     wlc_set_pointer_button_cb(pointer_button);
     wlc_set_pointer_motion_cb(pointer_motion);
     wlc_set_compositor_ready_cb(compositor_ready);
+    wlc_set_input_created_cb(input_created);
+    wlc_set_input_destroyed_cb(input_destroyed);
 }
