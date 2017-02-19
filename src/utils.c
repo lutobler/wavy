@@ -7,6 +7,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
+#include <wlc/wlc.h>
 
 #include "bar.h"
 #include "utils.h"
@@ -152,4 +153,9 @@ void print_frame_tree(struct frame *fr) {
     printf("\nCurrent frame tree (printed sideways): \n\n");
     _print_frame_tree(fr, 0);
     printf("\n");
+}
+
+void print_wlc_geometry(struct wlc_geometry *g) {
+    printf("x = %u, y = %u, w = %u, h = %u\n", g->origin.x, g->origin.y,
+            g->size.w, g->size.h);
 }

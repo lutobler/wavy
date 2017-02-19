@@ -34,4 +34,7 @@ void cmd_exec(const char *bin, char *const *args);
 // Print the tree of frames (sideways).
 void print_frame_tree(struct frame *fr);
 
+// Print the values of a wlc_geometry
+void print_wlc_geometry(struct wlc_geometry *g);
+
 #endif
