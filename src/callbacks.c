@@ -65,6 +65,7 @@ static bool view_created(wlc_handle view) {
     case WLC_BIT_POPUP:
         wlc_view_bring_to_front(view);
         wlc_view_set_mask(view, 1);
+        floating_view_add(view);
         break;
 
     // these views do
@@ -74,6 +75,7 @@ static bool view_created(wlc_handle view) {
         wlc_view_focus(view);
         wlc_view_bring_to_front(view);
         wlc_view_set_mask(view, 1);
+        floating_view_add(view);
         break;
     }
 
@@ -84,6 +86,7 @@ static void view_destroyed(wlc_handle view) {
     if (wlc_view_get_type(view) == 0) {
         child_delete(view);
     } else {
+        floating_view_delete(view);
         wlc_view_focus(get_active_view());
     }
 }
@@ -138,8 +141,12 @@ static bool pointer_button(wlc_handle view, uint32_t time,
     wavy_log(LOG_WAVY, "Pointer button event on view %lu at %ux%u",
             view, point->x, point->y);
 
-    if (state == WLC_BUTTON_STATE_PRESSED) {
-        focus_view(view);
+    if (view && state == WLC_BUTTON_STATE_PRESSED) {
+        if (wlc_view_get_type(view) != 0) { // floating window
+            wlc_view_focus(view);
+        } else {
+            focus_view(view); // tiled window
+        }
     }
     return false;
 }
@@ -156,8 +163,7 @@ static void view_request_geometry(wlc_handle view,
 static void output_render_pre(wlc_handle output) {
     struct output *out = get_output_by_handle(output);
 
-    wlc_resource surface;
-    surface = (wlc_resource) wlc_handle_get_user_data(output);
+    wlc_resource surface = (wlc_resource) wlc_handle_get_user_data(output);
     if (surface) {
         const struct wlc_geometry g = {
             wlc_origin_zero,

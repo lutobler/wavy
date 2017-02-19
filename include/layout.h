@@ -49,6 +49,7 @@ struct workspace {
     struct frame *root_frame;
     struct frame *active_frame;
     struct output *assigned_output;
+    struct vector_t *floating_views;
     uint32_t number;
     bool is_visible;
 };
@@ -58,8 +59,8 @@ struct border_t {
     cairo_t *cr;
     cairo_surface_t *surface;
     size_t buf_size;
-    struct wlc_geometry g_gaps; // real geometry without gaps
-    struct wlc_geometry g; // real geometry with gaps applied
+    struct wlc_geometry g_gaps; // geometry with gaps applied
+    struct wlc_geometry g;      // geometry without gaps
 };
 
 struct frame {
@@ -149,9 +150,14 @@ void frame_delete();
 // active frame.
 bool child_add(wlc_handle view);
 
-// Called when a child is deleted. Removes the view from the currently active
-// frame and focuses the next view.
+// Delete a child view from any frame
 void child_delete(wlc_handle view);
+
+// Add a floating view to the current workspace
+void floating_view_add(wlc_handle view);
+
+// Delete a floating view from any workspace
+void floating_view_delete(wlc_handle view);
 
 // Focuses the next closest view/frame in a given direction.
 void focus_direction(enum direction_t dir);

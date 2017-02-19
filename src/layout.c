@@ -217,6 +217,7 @@ static struct workspace *alloc_next_workspace() {
     ws_new->number = num;
     ws_new->is_visible = false;
     ws_new->assigned_output = NULL;
+    ws_new->floating_views = vector_init();
     return ws_new;
 }
 
@@ -360,6 +361,13 @@ void output_set_resolution(wlc_handle output, const struct wlc_size *size) {
     output_update_resolution(out, size->w, size->h);
 }
 
+static void workspace_floating_set_mask(struct workspace *ws, uint32_t mask) {
+    for (uint32_t i = 0; i < ws->floating_views->length; i++) {
+        wlc_handle v = *((wlc_handle *) ws->floating_views->items[i]);
+        wlc_view_set_mask(v, mask);
+    }
+}
+
 void workspace_switch_to(uint32_t num) {
     struct workspace *cur_ws = get_active_ws();
 
@@ -370,6 +378,7 @@ void workspace_switch_to(uint32_t num) {
     wavy_log(LOG_DEBUG, "Switching to workspace number %d", num + 1);
 
     frame_views_set_mask(cur_ws->root_frame, 0);
+    workspace_floating_set_mask(cur_ws, 0);
     cur_ws->is_visible = false;
     active_output->active_ws = workspaces->items[num];
 
@@ -381,6 +390,7 @@ void workspace_switch_to(uint32_t num) {
     update_bar(active_output);
     frame_redraw(active_output->active_ws->root_frame, true);
     frame_views_set_mask(active_output->active_ws->root_frame, 1);
+    workspace_floating_set_mask(active_output->active_ws, 1);
     wlc_view_focus(get_active_view());
     wlc_output_schedule_render(active_output->output_handle);
 }
@@ -997,6 +1007,7 @@ void child_delete(wlc_handle view) {
                     (i > 0) ? frame_get_view_i(fr, i -  1) :
                     frame_get_view_i(fr, 1);
 
+        free(fr->children->items[i]);
         vector_del(fr->children, i);
         fr->active_view = next_view;
         frame_redraw(fr, false);
@@ -1018,11 +1029,44 @@ void child_delete(wlc_handle view) {
                               frame_get_view_i(fr, 1);
         }
 
+        free(fr->children->items[i]);
         vector_del(fr->children, i);
         frame_redraw(fr, false);
     }
 
     wlc_view_focus(next_view);
+}
+
+static struct workspace *find_workpace_by_floating_view(wlc_handle view,
+        int32_t *idx) {
+
+    for (uint32_t i = 0; i < workspaces->length; i++) {
+        struct workspace *cur = workspaces->items[i];
+        for (uint32_t j = 0; j < cur->floating_views->length; j++) {
+            wlc_handle v = *((wlc_handle *) cur->floating_views->items[j]);
+            if (v == view) {
+                *idx = j;
+                return cur;
+            }
+        }
+    }
+    return NULL;
+}
+
+void floating_view_add(wlc_handle view) {
+    struct workspace *ws = active_output->active_ws;
+    wlc_handle *view_ptr = malloc(sizeof(wlc_handle));
+    *view_ptr = view;
+    vector_add(ws->floating_views, view_ptr);
+}
+
+void floating_view_delete(wlc_handle view) {
+    int32_t idx = -1;
+    struct workspace *ws = find_workpace_by_floating_view(view, &idx);
+    if (ws && idx >= 0) {
+        free(ws->floating_views->items[idx]);
+        vector_del(ws->floating_views, idx);
+    }
 }
 
 /*
@@ -1192,11 +1236,7 @@ void focus_direction(enum direction_t dir) {
 }
 
 void focus_view(wlc_handle view) {
-    if (!view) {
-        return;
-    }
-
-    if (get_active_view() == view) {
+    if (!view || get_active_view() == view) {
         return;
     }
 
