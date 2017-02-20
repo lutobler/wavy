@@ -12,6 +12,8 @@
 #include "bar.h"
 #include "utils.h"
 #include "wallpaper.h"
+#include "input.h"
+#include "config.h"
 
 // "key" is a keycode. We use keysyms internally for keybindings for now, but
 // will (hopefully) support keybindings with keycodes as well in the future.

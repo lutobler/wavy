@@ -28,6 +28,7 @@ add_executable(wavy
     src/commands.c
     src/config.c
     src/extensions.c
+    src/input.c
     src/layout.c
     src/log.c
     src/utils.c
