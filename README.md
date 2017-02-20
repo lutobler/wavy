@@ -36,6 +36,6 @@ point.
 
 ### Todo list
 - [ ] Complete wallaper support
-- [ ] Complete input configuration
+- [x] Input configuration
 - [ ] Frame gaps
 - [ ] Documentation
