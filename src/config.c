@@ -10,6 +10,7 @@
 #include <wlc/wlc.h>
 #include <pthread.h>
 #include <libinput.h>
+#include <xkbcommon/xkbcommon.h>
 
 #include "commands.h"
 #include "config.h"
@@ -43,7 +44,7 @@ static void default_config() {
     config->view_border_inactive_color          = 0x475b74ff;
 
     config->statusbar_height                    = 17;
-    config->statusbar_font                      = "DejaVu Sans";
+    config->statusbar_font                      = "monospace 10";
     config->statusbar_gap                       = 4;
     config->statusbar_padding                   = 10;
     config->statusbar_position                  = POS_TOP;
@@ -57,6 +58,248 @@ static void default_config() {
         config->tile_layouts[i] = i;
     }
     config->num_layouts = 5;
+}
+
+static void check_argc(lua_State *L, uint32_t argc_expected, uint32_t argc,
+        const char *func_name) {
+
+    if (argc_expected != argc) {
+        luaL_error(L, "Wrong number of arguments for a \'%s\' keybinding: "
+                      "expected %I, got %I",
+                      func_name, (lua_Integer) argc_expected,
+                      (lua_Integer) argc);
+    }
+}
+
+static uint32_t reg_lua_function(lua_State *L, int32_t idx_table, int32_t idx) {
+    if (lua_geti(L, idx_table, idx) != LUA_TFUNCTION) {
+        luaL_error(L, "Argument to \'lua\' keybinding must be function, got %s",
+                lua_typename(L, lua_type(L, -1)));
+    }
+    uint32_t ref = luaL_ref(L, LUA_REGISTRYINDEX); // pops stack
+    return ref;
+}
+
+static uint32_t string_to_mod(const char *str) {
+    if (!str) {
+        return 0;
+    }
+
+    if (!strcmp(str, "shift")) {
+        return WLC_BIT_MOD_SHIFT;
+    } else if (!strcmp(str, "super")) {
+        return WLC_BIT_MOD_LOGO;
+    } else if (!strcmp(str, "alt")) {
+        return WLC_BIT_MOD_ALT;
+    } else if (!strcmp(str, "ctrl")) {
+        return WLC_BIT_MOD_CTRL;
+    } else if (!strcmp(str, "caps")) {
+        return WLC_BIT_MOD_CAPS;
+    } else if (!strcmp(str, "mod2")) {
+        return WLC_BIT_MOD_MOD2;
+    } else if (!strcmp(str, "mod3")) {
+        return WLC_BIT_MOD_MOD3;
+    } else if (!strcmp(str, "mod5")) {
+        return WLC_BIT_MOD_MOD5;
+    } else {
+        return 0;
+    }
+}
+
+// idx: positive index of subtable of 'keys' table
+// modifier table is always the 2nd element in the table
+static uint32_t get_mod(lua_State *L, int32_t idx) {
+    if (lua_geti(L, idx, 2) != LUA_TTABLE) {
+        luaL_error(L, "Invalid modifier entry, expected table");
+    }
+    uint32_t mod = 0;
+    uint32_t len = lua_rawlen(L, -1);
+    for (uint32_t i = 0; i < len; i++) {
+        lua_geti(L, -1, i+1);
+        mod |= string_to_mod(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+    return mod;
+}
+
+// idx: positive index of subtable of 'keys' table
+// sym is always the 3rd element in the table
+static uint32_t get_sym(lua_State *L, int32_t idx) {
+    if (lua_geti(L, idx, 3) != LUA_TSTRING) {
+        luaL_error(L, "Invalid key symbol, expected string");
+    }
+    uint32_t keysym = xkb_keysym_from_name(lua_tostring(L, -1),
+            XKB_KEYSYM_CASE_INSENSITIVE);
+    lua_pop(L, 1);
+    return keysym;
+}
+
+static enum direction_t get_dir(lua_State *L, int32_t idx_table, int32_t idx) {
+    if (lua_geti(L, idx_table, idx) != LUA_TSTRING) {
+        luaL_error(L, "Direction argument must be a string");
+    }
+    enum direction_t dir;
+    const char *str = lua_tostring(L, -1);
+    if (!strcmp(str, "left")) {
+        dir = DIR_LEFT;
+    } else if (!strcmp(str, "right")) {
+        dir = DIR_RIGHT;
+    } else if (!strcmp(str, "up")) {
+        dir = DIR_UP;
+    } else {
+        dir = DIR_DOWN;
+    }
+    lua_pop(L, 1);
+    return dir;
+}
+
+static float get_float(lua_State *L, int32_t idx_table, int32_t idx) {
+    if (lua_geti(L, idx_table, idx) != LUA_TNUMBER) {
+        luaL_error(L, "Expected float argument, got %s",
+                lua_typename(L, lua_type(L, -1)));
+    }
+    float n = lua_tonumber(L, -1);
+    lua_pop(L, 1);
+    return n;
+}
+
+static uint32_t get_num(lua_State *L, int32_t idx_table, int32_t idx) {
+    if (lua_geti(L, idx_table, idx) != LUA_TNUMBER) {
+        luaL_error(L, "Expected number argument, got %s",
+                lua_typename(L, lua_type(L, -1)));
+    }
+    uint32_t n = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    return n;
+}
+
+// TODO
+// idx: positive index of subtable of 'keys' table
+static void keybind_string_filter(lua_State *L, int32_t idx) {
+    uint32_t argc = lua_rawlen(L, idx);
+    if (lua_geti(L, idx, 1) != LUA_TSTRING) {
+        luaL_error(L, "Invalid keybinding type: must be string, got %s",
+                lua_typename(L, lua_type(L, -1)));
+    }
+    const char *kb_str = lua_tostring(L, -1);
+
+    struct keybind_arg_t kb_null = {0, 0, 0, 0, 0};
+
+    if (!strcmp(kb_str, "spawn")) {
+        check_argc(L, argc, 4, "spawn");
+        if (lua_geti(L, idx, 4) != LUA_TTABLE) {
+            luaL_error(L, "Argument to \'spawn\' keybinding must be a table, "
+                          "got %s", lua_typename(L, lua_type(L, -1)));
+        }
+        struct keybind_arg_t kba = {.ptr = (void **) table_to_str_array(L, -1)};
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kba, spawn_cmd);
+        lua_pop(L, 1);
+    } else if (!strcmp(kb_str, "lua")) {
+        check_argc(L, argc, 4, "lua");
+        struct keybind_arg_t kba = {
+            .num = reg_lua_function(L, idx, 4)
+        };
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kba, lua_cmd);
+    } else if (!strcmp(kb_str, "exit")) {
+        check_argc(L, argc, 3, "exit");
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kb_null, exit_cmd);
+    } else if (!strcmp(kb_str, "close_view")) {
+        check_argc(L, argc, 3, "close_view");
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kb_null, close_view_cmd);
+    } else if (!strcmp(kb_str, "cycle_tiling_mode")) {
+        check_argc(L, argc, 3, "cycle_tiling_mode");
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kb_null,
+                cycle_tiling_mode_cmd);
+    } else if (!strcmp(kb_str, "cycle_view")) {
+        check_argc(L, argc, 4, "cycle_view");
+        if (lua_geti(L, idx, 4) != LUA_TSTRING) {
+            luaL_error(L, "Direction argument to \'cycle_view\' keybinding "
+                          "must be a string, got %s",
+                          lua_typename(L, lua_type(L, -1)));
+        }
+        const char *next_bkwd = lua_tostring(L, -1);
+        struct keybind_arg_t kba = {
+            .num = strcmp(next_bkwd, "previous") ? 1 : 0
+        };
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kba, cycle_view_cmd);
+        lua_pop(L, 1);
+    } else if (!strcmp(kb_str, "select")) {
+        check_argc(L, argc, 4, "select");
+        struct keybind_arg_t kba = {.dir = get_dir(L, idx, 4)};
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kba, select_cmd);
+    } else if (!strcmp(kb_str, "move")) {
+        check_argc(L, argc, 4, "move");
+        struct keybind_arg_t kba = {.dir = get_dir(L, idx, 4)};
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kba, move_cmd);
+    } else if (!strcmp(kb_str, "new_frame")) {
+        check_argc(L, argc, 4, "new_frame");
+        if (lua_geti(L, idx, 4) != LUA_TSTRING) {
+            luaL_error(L, "Direction argument to \'new_frame\' must be string, "
+                          "got %s", lua_typename(L, lua_type(L, -1)));
+        }
+        const char *d = lua_tostring(L, -1);
+        struct keybind_arg_t kba = {
+            .dir = strcmp(d, "right") ? DIR_LEFT : DIR_RIGHT
+        };
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kba, new_frame_cmd);
+        lua_pop(L, 1);
+    } else if (!strcmp(kb_str, "delete_frame")) {
+        check_argc(L, argc, 3, "delete_frame");
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kb_null, delete_frame_cmd);
+    } else if (!strcmp(kb_str, "resize")) {
+        check_argc(L, argc, 5, "resize");
+        struct keybind_arg_t kba = {
+            .dir = get_dir(L, idx, 4),
+            .f = get_float(L, idx, 5)
+        };
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kba, resize_cmd);
+    } else if (!strcmp(kb_str, "cycle_workspace")) {
+        check_argc(L, argc, 4, "cycle_workspace");
+        if (lua_geti(L, idx, 4) != LUA_TSTRING) {
+            luaL_error(L, "Invalid argument to \'cycle_workspace\', must be "
+                          "string, got %s", lua_typename(L, lua_type(L, -1)));
+        }
+        const char *next_bkwd = lua_tostring(L, -1);
+        struct keybind_arg_t kba = {
+            .num = strcmp(next_bkwd, "previous") ? 1 : 0
+        };
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kba, cycle_workspace_cmd);
+        lua_pop(L, 1);
+    } else if (!strcmp(kb_str, "add_workspace")) {
+        check_argc(L, argc, 3, "add_workspace");
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kb_null, add_ws_cmd);
+    } else if (!strcmp(kb_str, "select_workspace")) {
+        check_argc(L, argc, 4, "select_workspace");
+        struct keybind_arg_t kba = {.num = get_num(L, idx, 4)};
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kba, switch_workspace_cmd);
+    } else if (!strcmp(kb_str, "move_to_workspace")) {
+        check_argc(L, argc, 4, "move_to_workspace");
+        struct keybind_arg_t kba = {.num = get_num(L, idx, 4)};
+        cmd_update(get_mod(L, idx), get_sym(L, idx), kba, move_to_ws_cmd);
+    } else {
+        luaL_error(L, "Unknown keybinding type: \'%s\'", kb_str);
+    }
+
+    lua_pop(L, 1);
+}
+
+static void keybind_config(lua_State *L) {
+    if (lua_getglobal(L, "keys") != LUA_TTABLE) {
+        wavy_log(LOG_WAVY, "Warning: no keybindings specified!");
+        return;
+    }
+    int32_t keys = lua_gettop(L);
+    int32_t len = lua_rawlen(L, keys);
+    for (int32_t i = 0; i < len; i++) {
+        int32_t idx = i+1;
+        if (lua_geti(L, keys, idx) != LUA_TTABLE) {
+            luaL_error(L, "Invalid entry in \'keys\' table, must be table");
+        }
+        keybind_string_filter(L, lua_gettop(L));
+        lua_pop(L, 1);
+    }
+    lua_settop(L, 0);
 }
 
 static void set_conf_int(lua_State *L, const char *name, uint32_t *conf,
@@ -82,7 +325,6 @@ static void set_layouts(lua_State *L) {
         lua_settop(L, 0);
         return;
     }
-
     config->num_layouts = lua_rawlen(L, -1);
     for (uint32_t i = 0; i < config->num_layouts; i++) {
         if (lua_geti(L, -1, i+1) == LUA_TTABLE &&
@@ -181,7 +423,6 @@ static void bar_config(lua_State *L) {
     if (lua_getfield(L, bar_idx, "widgets") == LUA_TTABLE) {
         int32_t widgets = lua_gettop(L);
         uint32_t len = lua_rawlen(L, widgets);
-
         for (uint32_t i = 0; i < len; i++) {
             if (lua_geti(L, widgets, i+1) == LUA_TTABLE) {
                 int ref;
@@ -324,6 +565,7 @@ void init_config() {
     read_config(L_config);
     bar_config(L_config);
     input_configs_init(L_config);
+    keybind_config(L_config);
     free((void *) config_file);
 }
 

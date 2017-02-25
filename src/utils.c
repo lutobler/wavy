@@ -28,6 +28,7 @@ const char **table_to_str_array(lua_State *L, int32_t index) {
 
     for (uint32_t i = 0; i < len; i++) {
         lua_geti(L, index, i+1);
+        luaL_checktype(L, -1, LUA_TSTRING);
         const char *stack_str = lua_tostring(L, -1);
 
         // the lua runtime will garbage collect the original string

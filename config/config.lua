@@ -76,54 +76,57 @@ if not terminal then
     terminal = "urxvt"
 end
 
--- application shortcuts
-kb_spawn({modkey}, "Return", {terminal})
-kb_spawn({modkey}, "d", dmenu)
+keys = {
+    -- application shortcuts
+    {"spawn", {modkey}, "Return", {terminal}},
+    {"spawn", {modkey}, "d",      dmenu},
 
--- bindings to lua functions
-kb_lua({}, "XF86AudioRaiseVolume",  function() utils.pulsecontrol("up", 5) end)
-kb_lua({}, "XF86AudioLowerVolume",  function() utils.pulsecontrol("down", 5) end)
-kb_lua({}, "XF86AudioMute",         function() utils.pulsecontrol("mute") end)
-kb_lua({}, "XF86MonBrightnessUp",   function() utils.brtcontrol("up") end)
-kb_lua({}, "XF86MonBrightnessDown", function() utils.brtcontrol("down") end)
+    -- bindings to lua functions
+    {"lua", {}, "XF86AudioRaiseVolume",  function() utils.pulsecontrol("up", 5) end},
+    {"lua", {}, "XF86AudioLowerVolume",  function() utils.pulsecontrol("down", 5) end},
+    {"lua", {}, "XF86AudioMute",         function() utils.pulsecontrol("mute") end},
+    {"lua", {}, "XF86MonBrightnessUp",   function() utils.brtcontrol("up") end},
+    {"lua", {}, "XF86MonBrightnessDown", function() utils.brtcontrol("down") end},
 
--- window managing basics
-kb_exit({modkey, "shift"}, "e")
-kb_close_view({modkey}, "q")
-kb_cycle_tiling_mode({modkey}, "space")
+    -- window managing basics
+    {"exit",              {modkey, "shift"}, "e"},
+    {"close_view",        {modkey},          "q"},
+    {"cycle_tiling_mode", {modkey},          "space"},
 
--- cycle through the views inside a frame
-kb_cycle_view({modkey}, "tab", "next")
-kb_cycle_view({modkey, "shift"}, "tab", "previous")
+    -- cycle through the views inside a frame
+    {"cycle_view", {modkey},          "tab", "next"},
+    {"cycle_view", {modkey, "shift"}, "tab", "previous"},
 
--- select views/frame via arrow keys
-kb_select({modkey}, "h", "left")
-kb_select({modkey}, "j", "down")
-kb_select({modkey}, "k", "up")
-kb_select({modkey}, "l", "right")
+    -- select views/frame via arrow keys
+    {"select", {modkey}, "h", "left"},
+    {"select", {modkey}, "j", "down"},
+    {"select", {modkey}, "k", "up"},
+    {"select", {modkey}, "l", "right"},
 
--- move views in a direction
-kb_move({modkey, "shift"}, "h", "left")
-kb_move({modkey, "shift"}, "j", "down")
-kb_move({modkey, "shift"}, "k", "up")
-kb_move({modkey, "shift"}, "l", "right")
+    -- move views in a direction
+    {"move", {modkey, "shift"}, "h", "left"},
+    {"move", {modkey, "shift"}, "j", "down"},
+    {"move", {modkey, "shift"}, "k", "up"},
+    {"move", {modkey, "shift"}, "l", "right"},
 
--- frame manipulation
-kb_new_frame_right({modkey}, "p")
-kb_new_frame_down({modkey}, "o")
-kb_delete_frame({modkey}, "r")
-kb_resize({"alt"}, "h", "left", 0.05)
-kb_resize({"alt"}, "j", "down", 0.05)
-kb_resize({"alt"}, "k", "up", 0.05)
-kb_resize({"alt"}, "l", "right", 0.05)
+    -- frame manipulation
+    {"new_frame",    {modkey}, "p", "right"},
+    {"new_frame",    {modkey}, "o", "down"},
+    {"delete_frame", {modkey}, "r"},
+    {"resize",       {"alt"},  "h", "left",  0.05},
+    {"resize",       {"alt"},  "j", "down",  0.05},
+    {"resize",       {"alt"},  "k", "up",    0.05},
+    {"resize",       {"alt"},  "l", "right", 0.05},
 
--- workspaces
-kb_cycle_workspace({modkey}, "period", "next")
-kb_cycle_workspace({modkey}, "comma", "previous")
-kb_add_workspace({modkey}, "plus")
+    -- workspaces
+    {"cycle_workspace", {modkey}, "period", "next"},
+    {"cycle_workspace", {modkey}, "comma",  "previous"},
+    {"add_workspace",   {modkey}, "plus"},
+}
 
+-- select/move to workspaces with keys 1 to 9
 ws_keys = {"1", "2", "3", "4", "5", "6", "7", "8", "9"}
 for i,v in ipairs(ws_keys) do
-    kb_select_workspace({modkey}, v)
-    kb_move_to_workspace({modkey, "shift"}, v)
+    table.insert(keys, {"select_workspace", {modkey}, v, i})
+    table.insert(keys, {"move_to_workspace", {modkey, "shift"}, v, i})
 end
