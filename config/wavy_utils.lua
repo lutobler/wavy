@@ -196,13 +196,13 @@ wavy.widgets.default.kernel = {
 
 wavy.widgets.default.brightness = {
     wavy.alignment.right,
-    wavy.hooks.periodic_slow,
+    wavy.hooks.user,
     wavy.widgets.callbacks.brightness
 }
 
 wavy.widgets.default.volume = {
     wavy.alignment.right,
-    wavy.hooks.periodic_slow,
+    wavy.hooks.user,
     wavy.widgets.callbacks.volume
 }
 
