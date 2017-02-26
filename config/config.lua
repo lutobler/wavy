@@ -76,8 +76,8 @@ bar = {
             end
         },
         wavy.widgets.default.kernel,
-        wavy.widgets.default.view_title,
         wavy.widgets.default.tiling_symbol
+        wavy.widgets.default.view_title,
     }
 }
 
