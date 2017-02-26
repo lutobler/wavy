@@ -1,6 +1,6 @@
 package.path = os.getenv("HOME") .. "/.config/wavy/?.lua;" .. package.path
 package.cpath = "/home/luke/wavy/?.so;" .. package.cpath
-utils = require("wavy_utils")
+wavy = require("wavy_utils")
 
 -- [[ WAVY CONFIGURATION ]] --
 
@@ -50,18 +50,34 @@ bar = {
     },
 
     widgets = {
-        {"right", "hook_periodic_slow", utils.time},
-        {"right", "hook_periodic_slow", utils.battery},
-        {"right", "hook_user",          utils.volume},
-        {"right", "hook_user",          utils.brt},
-        {"right", "hook_periodic_slow", utils.wifi},
-        {"right", "hook_periodic_slow", function()
-                                            return utils.net_device("wlp4s0")
-                                        end},
-        {"right", "hook_periodic_slow", utils.fs_used},
-        {"right", "hook_periodic_slow", utils.kernel},
-        {"left",  "hook_view_update",   utils.tiling_symbol},
-        {"left",  "hook_view_update",   utils.view_title},
+        wavy.widgets.default.time,
+        wavy.widgets.default.battery,
+        wavy.widgets.default.volume,
+        wavy.widgets.default.brightness,
+        {
+            wavy.alignment.right,
+            wavy.hooks.periodic_slow,
+            function()
+                return wavy.widgets.callbacks.wifi("wlp4s0")
+            end
+        },
+        {
+            wavy.alignment.right,
+            wavy.hooks.periodic_slow,
+            function()
+                return wavy.widgets.callbacks.net_device("wlp4s0")
+            end
+        },
+        {
+            wavy.alignment.right,
+            wavy.hooks.periodic_slow,
+            function()
+                return wavy.widgets.callbacks.fs_status("/")
+            end
+        },
+        wavy.widgets.default.kernel,
+        wavy.widgets.default.view_title,
+        wavy.widgets.default.tiling_symbol
     }
 }
 
@@ -82,11 +98,11 @@ keys = {
     {"spawn", {modkey}, "d",      dmenu},
 
     -- bindings to lua functions
-    {"lua", {}, "XF86AudioRaiseVolume",  function() utils.pulsecontrol("up", 5) end},
-    {"lua", {}, "XF86AudioLowerVolume",  function() utils.pulsecontrol("down", 5) end},
-    {"lua", {}, "XF86AudioMute",         function() utils.pulsecontrol("mute") end},
-    {"lua", {}, "XF86MonBrightnessUp",   function() utils.brtcontrol("up") end},
-    {"lua", {}, "XF86MonBrightnessDown", function() utils.brtcontrol("down") end},
+    {"lua", {}, "XF86AudioRaiseVolume",  function() wavy.utils.pulsectl("up", 5) end},
+    {"lua", {}, "XF86AudioLowerVolume",  function() wavy.utils.pulsectl("down", 5) end},
+    {"lua", {}, "XF86AudioMute",         function() wavy.utils.pulsectl("mute") end},
+    {"lua", {}, "XF86MonBrightnessUp",   function() wavy.utils.brtctl("up") end},
+    {"lua", {}, "XF86MonBrightnessDown", function() wavy.utils.brtctl("down") end},
 
     -- window managing basics
     {"exit",              {modkey, "shift"}, "e"},
