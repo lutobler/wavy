@@ -126,7 +126,7 @@ function wavy.widgets.callbacks.battery()
         elseif f_stat then
             f_stat:close()
         end
-        return {0, 0, nil}
+        return {0, 0, ""}
     end
 end
 
@@ -148,7 +148,7 @@ function wavy.widgets.callbacks.net_device(dev)
     local ip_str = wavy.utils.exec(cmd)
 
     if ip_str == "" then
-        return null
+        return {0, 0, ""}
     else
         str = dev .. ": " .. ip_str
         return {bg, fg, str}
