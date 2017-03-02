@@ -106,8 +106,7 @@ static void draw_text(cairo_t *cr, PangoLayout *layout, uint32_t w, uint32_t h,
     pango_cairo_show_layout(cr, layout);
 }
 
-static void draw_workspace_indicators(struct output *out) {
-    cairo_t *cr = out->bar.cr;
+static void draw_workspace_indicators(struct output *out, cairo_t *cr) {
     struct vector_t *workspaces = get_workspaces();
     uint32_t ws_rect_width = 20; // FIXME: don't hardcode this
     uint32_t bar_height = config->statusbar_height;
@@ -142,12 +141,11 @@ static void draw_workspace_indicators(struct output *out) {
     }
 }
 
-static void draw_data(struct bar_t *bar) {
+static void draw_data(struct bar_t *bar, cairo_t *cr) {
     if (!status_entries) { // might not be initialized yet
         return;
     }
 
-    cairo_t *cr = bar->cr;
     uint32_t bar_height = config->statusbar_height;
     uint32_t padding = config->statusbar_padding;
     uint32_t gap = config->statusbar_gap;
@@ -195,13 +193,22 @@ static void draw_data(struct bar_t *bar) {
 
 static void alloc_bar(struct output *out) {
     int stride = 4 * out->bar.g.size.w;
-    out->bar.buffer = calloc(stride * out->bar.g.size.h, sizeof(unsigned char));
-    out->bar.surface = cairo_image_surface_create_for_data(out->bar.buffer,
-                                                        CAIRO_FORMAT_ARGB32,
-                                                        out->bar.g.size.w,
-                                                        out->bar.g.size.h,
-                                                        stride);
-    out->bar.cr = cairo_create(out->bar.surface);
+
+    // front buffer
+    out->bar.front->buffer = calloc(stride * out->bar.g.size.h,
+            sizeof(unsigned char));
+    out->bar.front->surface = cairo_image_surface_create_for_data(
+            out->bar.front->buffer, CAIRO_FORMAT_ARGB32, out->bar.g.size.w,
+            out->bar.g.size.h, stride);
+    out->bar.front->cr = cairo_create(out->bar.front->surface);
+
+    // back buffer
+    out->bar.back->buffer = calloc(stride * out->bar.g.size.h,
+            sizeof(unsigned char));
+    out->bar.back->surface = cairo_image_surface_create_for_data(
+            out->bar.back->buffer, CAIRO_FORMAT_ARGB32, out->bar.g.size.w,
+            out->bar.g.size.h, stride);
+    out->bar.back->cr = cairo_create(out->bar.back->surface);
 }
 
 void update_bar(struct output *out) {
@@ -215,41 +222,55 @@ void update_bar(struct output *out) {
                                 out->g.size.h;
         out->bar.g.size.w = out->g.size.w;
         out->bar.g.size.h = config->statusbar_height;
-        if (out->bar.buffer) {
-            free(out->bar.buffer);
+        if (out->bar.front->buffer) {
+            free(out->bar.front->buffer);
         }
-        if (out->bar.surface) {
-            cairo_surface_destroy(out->bar.surface);
-            cairo_destroy(out->bar.cr);
+        if (out->bar.back->buffer) {
+            free(out->bar.back->buffer);
+        }
+        if (out->bar.front->surface) {
+            cairo_surface_destroy(out->bar.front->surface);
+            cairo_destroy(out->bar.front->cr);
+        }
+        if (out->bar.back->surface) {
+            cairo_surface_destroy(out->bar.back->surface);
+            cairo_destroy(out->bar.back->cr);
         }
         alloc_bar(out);
         out->bar.dirty = false;
+
+        // when drawing over other stuff, replace the destination layer.
+        // this means transparent elements like background/workspace aren't
+        // composed, the color/transparency of the last drawn layer is applied.
+        cairo_set_operator(out->bar.front->cr, CAIRO_OPERATOR_SOURCE);
+        cairo_set_operator(out->bar.back->cr, CAIRO_OPERATOR_SOURCE);
     }
 
-    // when drawing over other stuff, replace the destination layer.
-    // this means transparent elements like background/workspace aren't
-    // composed, the color/transparency of the last drawn layer is applied.
-    cairo_set_operator(out->bar.cr, CAIRO_OPERATOR_SOURCE);
-
     // background
-    cr_set_argb_color(out->bar.cr, config->statusbar_bg_color);
-    cairo_paint(out->bar.cr);
+    cr_set_argb_color(out->bar.back->cr, config->statusbar_bg_color);
+    cairo_paint(out->bar.back->cr);
 
     // workspaces
-    draw_workspace_indicators(out);
+    draw_workspace_indicators(out, out->bar.back->cr);
 
     // user defined statusbar elements
-    draw_data(&out->bar);
+    draw_data(&out->bar, out->bar.back->cr);
 
-    cairo_surface_flush(out->bar.surface);
+    cairo_surface_flush(out->bar.back->surface);
+
+    // swap the front/back buffer
+    struct bar_buffer *tmp = out->bar.back;
+    out->bar.back = out->bar.front;
+    out->bar.front = tmp;
+
     pthread_mutex_unlock(&out->bar.draw_lock);
 }
 
 void render_bar(struct output *out) {
-    if (!out || !out->bar.buffer) {
+    if (!out || !out->bar.front->buffer) {
         return;
     }
-    wlc_pixels_write(WLC_RGBA8888, &out->bar.g, out->bar.buffer);
+    wlc_pixels_write(WLC_RGBA8888, &out->bar.g, out->bar.front->buffer);
 }
 
 void init_bar_config() {
@@ -288,8 +309,19 @@ void init_bar_threads() {
 }
 
 void init_bar(struct output *out) {
-    out->bar.dirty = true;
+    out->bar.dirty = true; // buffers will be allocated on next update
     pthread_mutex_init(&out->bar.draw_lock, NULL);
+    out->bar.front = calloc(1, sizeof(struct bar_buffer));
+    if (!out->bar.front) {
+        wavy_log(LOG_ERROR, "Failed to allocate bar_buffer struct");
+        exit(EXIT_FAILURE);
+    }
+    out->bar.back = calloc(1, sizeof(struct bar_buffer));
+    if (!out->bar.front) {
+        free(out->bar.front);
+        wavy_log(LOG_ERROR, "Failed to allocate bar_buffer struct");
+        exit(EXIT_FAILURE);
+    }
 
     // trigger all the hooks once on initialization. use a separate thread
     // so startup isn't blocked by a slow script.
@@ -307,9 +339,12 @@ void free_bar(struct bar_t *bar) {
     }
     vector_free(status_entries);
 
-    cairo_surface_destroy(bar->surface);
-    cairo_destroy(bar->cr);
-    free(bar->buffer);
+    cairo_surface_destroy(bar->front->surface);
+    cairo_surface_destroy(bar->back->surface);
+    cairo_destroy(bar->front->cr);
+    cairo_destroy(bar->back->cr);
+    free(bar->front->buffer);
+    free(bar->back->buffer);
 }
 
 void stop_bar_threads() {

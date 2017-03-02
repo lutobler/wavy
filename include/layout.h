@@ -27,20 +27,27 @@ enum direction_t {
     DIR_RIGHT
 };
 
+struct bar_buffer {
+    unsigned char *buffer;
+    cairo_t *cr;
+    cairo_surface_t *surface;
+};
+
 struct output {
     struct workspace *active_ws;
     wlc_handle output_handle;
     struct wlc_geometry g; // geometry adjusted for the statusbar
 
+    // two buffers are used with ping-pong style double buffering to eliminate
+    // rendering artifacts.
     struct bar_t {
-        unsigned char *buffer;
+        struct bar_buffer *front;
+        struct bar_buffer *back;
         struct wlc_geometry g;
-        cairo_t *cr;
-        cairo_surface_t *surface;
         pthread_mutex_t draw_lock;
 
-        // If set, the buffer will be reallocated on the next update.
-        // This is needed for changing the output resolution.
+        // if set, the buffer will be reallocated on the next update.
+        // (used for changing output resolution)
         bool dirty;
     } bar;
 };
