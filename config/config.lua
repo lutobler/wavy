@@ -1,5 +1,7 @@
 package.path = os.getenv("HOME") .. "/.config/wavy/?.lua;" .. package.path
-package.cpath = "/home/luke/wavy/?.so;" .. package.cpath
+package.path = os.getenv("HOME") .. "/wavy/config/?.lua;" .. package.path
+package.path = os.getenv("HOME") .. "./config/?.lua;" .. package.path
+package.cpath = os.getenv("HOME") .. "/wavy/?.so;" .. package.cpath
 wavy = require("wavy_utils")
 
 -- [[ WAVY CONFIGURATION ]] --
@@ -17,7 +19,7 @@ config = {
     view_border_active_color            = 0x4897cfff,
     view_border_inactive_color          = 0x475b74ff,
 
-    wallpaper                           = "~/wavy/assets/wavy_wallpaper.png"
+    wallpaper                           = "./assets/wavy_wallpaper.png"
 }
 
 layouts = {
