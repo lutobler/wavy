@@ -7,7 +7,7 @@ wavy.widgets = {}
 wavy.widgets.default = {}       -- some standard widgets
 wavy.widgets.callbacks = {}     -- statusbar callback functions
 local bg = 0x404055e8           -- default background (RGBA)
-local fg = 0xffffffff           -- default foregroudn (RGBA)
+local fg = 0xffffffff           -- default foreground (RGBA)
 
 wavy.hooks = {
     periodic_slow = "hook_periodic_slow",

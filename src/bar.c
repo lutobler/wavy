@@ -17,6 +17,9 @@
 #include "log.h"
 #include "vector.h"
 
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+
 static void update_all_bars() {
     struct vector_t *outs = get_outputs();
     for (uint32_t i = 0; i < outs->length; i++) {
@@ -108,7 +111,7 @@ static void draw_text(cairo_t *cr, PangoLayout *layout, uint32_t w, uint32_t h,
 
 static void draw_workspace_indicators(struct output *out, cairo_t *cr) {
     struct vector_t *workspaces = get_workspaces();
-    uint32_t ws_rect_width = 20; // FIXME: don't hardcode this
+    uint32_t ws_rect_width = 20;
     uint32_t bar_height = config->statusbar_height;
 
     for (unsigned i = 0; i < workspaces->length; i++) {
@@ -142,15 +145,25 @@ static void draw_workspace_indicators(struct output *out, cairo_t *cr) {
 }
 
 static void draw_data(struct bar_t *bar, cairo_t *cr) {
-    if (!status_entries) { // might not be initialized yet
+    if (!status_entries) { // possibly uninitialized
         return;
     }
 
     uint32_t bar_height = config->statusbar_height;
     uint32_t padding = config->statusbar_padding;
     uint32_t gap = config->statusbar_gap;
+
+    // add gap so the rightmost element is flush with the end of the screen
     uint32_t prev_x_right = bar->g.size.w + gap;
-    uint32_t prev_x_left = (get_workspaces())->length * 20 + gap; // FIXME dont hardcode this
+    uint32_t prev_x_left = (get_workspaces())->length * 20;
+
+    uint32_t sep_x = 0;
+    uint32_t sep_h = bar_height * 0.6; // a factor of 0.6 seems to look nice
+    uint32_t sep_y = (bar_height - sep_h) / 2;
+    uint32_t sep_w = config->statusbar_separator_width;
+
+    bool first_right = true;
+    bool first_left = true;
 
     for (uint32_t i = 0; i < status_entries->length; i++) {
         struct status_entry_t *e = status_entries->items[i];
@@ -172,11 +185,14 @@ static void draw_data(struct bar_t *bar, cairo_t *cr) {
         uint32_t width = text_width + 2*padding;
 
         if (e->side == SIDE_RIGHT) {
-            x = prev_x_right - width - gap;
+            sep_x = prev_x_right - (gap / 2) - sep_w;
+            x = prev_x_right - width - MAX(gap, sep_w);
             prev_x_right = x;
         } else if (e->side == SIDE_LEFT) {
-            x = prev_x_left;
-            prev_x_left = prev_x_left + width + gap;
+            // 'prev' actually means next here
+            x = prev_x_left + MAX(sep_w, gap);
+            prev_x_left = x + width;
+            sep_x = x - (gap / 2) - sep_w;
         }
 
         // background
@@ -188,6 +204,27 @@ static void draw_data(struct bar_t *bar, cairo_t *cr) {
         cr_set_argb_color(cr, e->fg_color);
         draw_text(cr, layout, width, bar_height, x, bar->g.origin.y);
         g_object_unref(layout);
+
+        // separator
+        if (config->statusbar_separator_enabled &&
+            !(first_right && e->side == SIDE_RIGHT)) {
+
+            cr_set_argb_color(cr, config->statusbar_separator_color);
+
+            // adding 0.5 makes cairo render the line sharply
+            cairo_move_to(cr, sep_x + 0.5, sep_y);
+            cairo_line_to(cr, sep_x + 0.5, sep_y + sep_h);
+
+            cairo_set_line_width(cr, sep_w);
+            cairo_stroke(cr);
+            cairo_fill(cr);
+        }
+
+        if (e->side == SIDE_RIGHT) {
+            first_right = false;
+        } else if (e->side == SIDE_LEFT) {
+            first_left = false;
+        }
     }
 }
 

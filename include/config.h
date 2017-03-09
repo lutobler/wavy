@@ -36,6 +36,9 @@ struct wavy_config_t {
     uint32_t    statusbar_inactive_ws_color;
     uint32_t    statusbar_active_ws_font_color;
     uint32_t    statusbar_inactive_ws_font_color;
+    bool        statusbar_separator_enabled;
+    uint32_t    statusbar_separator_color;
+    uint32_t    statusbar_separator_width;
 
     uint32_t    frame_gaps_size;
     uint32_t    frame_border_size;

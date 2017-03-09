@@ -35,11 +35,14 @@ autostart = {
 --[[ STATUSBAR ]]--
 
 bar = {
-    height      = 18,
-    font        = "monospace 10",
-    gap         = 4,                            -- gap between elements
-    padding     = 10,                           -- padding around text
-    position    = "top",                        -- top, bottom
+    height          = 18,
+    font            = "monospace 10",
+    gap             = 4,                            -- gap between elements
+    padding         = 10,                           -- padding around text
+    position        = "top",                        -- top, bottom
+    separator       = true,                         -- might look bad with gaps
+    separator_color = 0x2d95efff,
+    separator_width = 1,                            -- pixels
 
     colors = {
         background              = 0x282828a0,
@@ -89,12 +92,12 @@ dmenu = {"dmenu_run"}
 
 terminal = os.getenv("TERMINAL")
 if not terminal then
-    terminal = "urxvt"
+    terminal = {"urxvt"}
 end
 
 keys = {
     -- application shortcuts
-    {"spawn", {modkey}, "Return", {terminal}},
+    {"spawn", {modkey}, "Return", terminal},
     {"spawn", {modkey}, "d",      dmenu},
 
     -- bindings to lua functions

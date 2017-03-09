@@ -53,6 +53,9 @@ static void default_config() {
     config->statusbar_inactive_ws_color         = 0x404055ff;
     config->statusbar_active_ws_font_color      = 0xffffffff;
     config->statusbar_inactive_ws_font_color    = 0xccccccff;
+    config->statusbar_separator_enabled         = false;
+    config->statusbar_separator_color           = 0x2d95efff;
+    config->statusbar_separator_width           = 1;
 
     for (uint32_t i = 0; i < 5; i++) {
         config->tile_layouts[i] = i;
@@ -320,6 +323,15 @@ static void set_conf_str(lua_State *L, const char *name, char **conf,
     lua_pop(L, 1);
 }
 
+static void set_conf_bool(lua_State *L, const char *name, bool *conf,
+        int32_t idx) {
+
+    if (lua_getfield(L, idx, name) == LUA_TBOOLEAN) {
+        *conf = lua_toboolean(L, -1);
+    }
+    lua_pop(L, 1);
+}
+
 static void set_layouts(lua_State *L) {
     if (lua_getglobal(L, "layouts") != LUA_TTABLE) {
         lua_settop(L, 0);
@@ -398,6 +410,12 @@ static void bar_config(lua_State *L) {
     set_conf_str(L, "font", &config->statusbar_font, bar_idx);
     set_conf_int(L, "gap", &config->statusbar_gap, bar_idx);
     set_conf_int(L, "padding", &config->statusbar_padding, bar_idx);
+    set_conf_bool(L, "separator", &config->statusbar_separator_enabled,
+            bar_idx);
+    set_conf_int(L, "separator_color", &config->statusbar_separator_color,
+            bar_idx);
+    set_conf_int(L, "separator_width", &config->statusbar_separator_width,
+            bar_idx);
 
     if (lua_getfield(L, bar_idx, "position") == LUA_TSTRING) {
         enum position_t p = pos_str_to_enum(lua_tostring(L, -1));
