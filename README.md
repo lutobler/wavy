@@ -1,5 +1,8 @@
 # Wavy wayland compositor
 
+NB: This is higly experimental. Use sway or something else with less bugs
+instead.
+
 ### Description
 Wavy is a tiling wayland compositor based on [wlc](https://github.com/Cloudef/wlc),
 inspired by herbstluftwm, i3, awesome and dwm. Parts of the implementation are heavily
