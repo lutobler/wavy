@@ -1,7 +1,7 @@
 # Wavy wayland compositor
 
-NB: This is higly experimental. Use sway or something else with less bugs
-instead.
+NB: This is higly experimental (very alpha). Use sway or something else with
+less bugs instead.
 
 ### Description
 Wavy is a tiling wayland compositor based on [wlc](https://github.com/Cloudef/wlc),
@@ -13,8 +13,6 @@ system that can be easily modified and expanded.
 For a commented example configuration see `config/config.lua`
 
 It also comes with a status bar included!
-
-N. B.: Wavy should be consired a _pre-alpha_ stage project.
 
 ### Building
 
