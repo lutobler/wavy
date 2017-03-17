@@ -13,9 +13,11 @@
 #include "extensions.h"
 #include "wallpaper.h"
 
-static const char *wavy_version = "wavy version: 0.0.1\n";
+#define WAVY_VERSION "wavy version: 0.0.1"
+
 bool debug_enabled = false;
 bool wlc_output_enabled = true;
+bool color_log_enabled = true;
 char *cmdline_config_file = NULL;
 
 int main(int argc, char **argv) {
@@ -26,16 +28,17 @@ int main(int argc, char **argv) {
         "  -v,          --version           Print version information and exit\n"
         "  -d           --debug             Enable additional debug output\n"
         "  -W           --no-wlc-output     Disable output from wlc\n"
+        "  -C           --no-color          Disable colored log output\n"
         "  -c <file>    --config <file>     Select a config file\n"
         "\n";
 
-    const char *optstring = "hvdWc:";
-
+    const char *optstring = "hvdWCc:";
     const struct option long_options[] = {
         {"help",            no_argument,        NULL, 'h'},
         {"version",         no_argument,        NULL, 'v'},
         {"debug",           no_argument,        NULL, 'd'},
         {"no-wlc-output",   no_argument,        NULL, 'W'},
+        {"no-color",        no_argument,        NULL, 'C'},
         {"config",          required_argument,  NULL, 'c'},
         {0, 0, 0, 0}
     };
@@ -54,7 +57,7 @@ int main(int argc, char **argv) {
             exit(EXIT_SUCCESS);
             break;
         case 'v':
-            fprintf(stdout, "%s", wavy_version);
+            fprintf(stdout, "%s\n", WAVY_VERSION);
             exit(EXIT_SUCCESS);
             break;
         case 'd':
@@ -62,6 +65,9 @@ int main(int argc, char **argv) {
             break;
         case 'W':
             wlc_output_enabled = false;
+            break;
+        case 'C':
+            color_log_enabled = false;
             break;
         case 'c':
             cmdline_config_file = optarg;

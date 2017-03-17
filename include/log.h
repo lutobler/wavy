@@ -11,6 +11,7 @@ enum wavy_log_t {
 
 extern bool debug_enabled;
 extern bool wlc_output_enabled;
+extern bool color_log_enabled;
 
 void wavy_log(enum wavy_log_t type, char *fmt, ...);
 
