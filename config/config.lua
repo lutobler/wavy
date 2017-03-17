@@ -19,7 +19,7 @@ config = {
     view_border_active_color            = 0x4897cfff,
     view_border_inactive_color          = 0x475b74ff,
 
-    wallpaper                           = "./assets/wavy_wallpaper.png"
+    wallpaper                           = "./assets/Penguin2_1080.png"
 }
 
 -- the second string will displayed in the status bar to indicate the
