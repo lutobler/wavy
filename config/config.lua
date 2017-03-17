@@ -22,6 +22,8 @@ config = {
     wallpaper                           = "./assets/wavy_wallpaper.png"
 }
 
+-- the second string will displayed in the status bar to indicate the
+-- tiling mode of the selected frame
 layouts = {
     {"vertical",   "[-]"},
     {"horizontal", "[|]"},
@@ -30,6 +32,7 @@ layouts = {
     {"fibonacci",  "[@]"}
 }
 
+-- autostart applications
 autostart = {
     {"xrdb", "$HOME/.Xresources"},
 }
@@ -39,12 +42,12 @@ autostart = {
 bar = {
     height          = 18,
     font            = "monospace 10",
-    gap             = 4,                            -- gap between elements
-    padding         = 10,                           -- padding around text
-    position        = "top",                        -- top, bottom
-    separator       = true,                         -- might look bad with gaps
+    gap             = 0,                        -- gap between elements
+    padding         = 10,                       -- padding around text
+    position        = "top",                    -- top, bottom
+    separator       = true,                     -- might look together with gaps
     separator_color = 0x2d95efff,
-    separator_width = 1,                            -- pixels
+    separator_width = 1,                        -- pixels
 
     colors = {
         background              = 0x282828a0,
@@ -54,6 +57,7 @@ bar = {
         inactive_workspace_font = 0xccccccff,
     },
 
+    -- see "wavy_utils.lua" for the implementation of the default widgets
     widgets = {
         wavy.widgets.default.time,
         wavy.widgets.default.battery,
@@ -102,7 +106,8 @@ keys = {
     {"spawn", {modkey}, "Return", terminal},
     {"spawn", {modkey}, "d",      dmenu},
 
-    -- bindings to lua functions
+    -- bindings to lua functions: a function with no arguments is expected.
+    -- wrap functions with arguments in lambdas
     {"lua", {}, "XF86AudioRaiseVolume",  function() wavy.utils.pulsectl("up", 5) end},
     {"lua", {}, "XF86AudioLowerVolume",  function() wavy.utils.pulsectl("down", 5) end},
     {"lua", {}, "XF86AudioMute",         function() wavy.utils.pulsectl("mute") end},
@@ -134,7 +139,7 @@ keys = {
     {"new_frame",    {modkey}, "p", "right"},
     {"new_frame",    {modkey}, "o", "down"},
     {"delete_frame", {modkey}, "r"},
-    {"resize",       {"alt"},  "h", "left",  0.05},
+    {"resize",       {"alt"},  "h", "left",  0.05}, -- number in percent
     {"resize",       {"alt"},  "j", "down",  0.05},
     {"resize",       {"alt"},  "k", "up",    0.05},
     {"resize",       {"alt"},  "l", "right", 0.05},
