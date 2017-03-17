@@ -36,7 +36,8 @@ Thats it, you can run the binary now. Installation is not implemented at this
 point.
 
 ### Todo list
-- [ ] Complete wallaper support
-- [x] Input configuration
+- [ ] Fix build system
 - [ ] Frame gaps
 - [ ] Documentation
+- [ ] Complete wallaper support
+- [x] Input configuration
