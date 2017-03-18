@@ -45,7 +45,7 @@ bar = {
     gap             = 0,                        -- gap between elements
     padding         = 10,                       -- padding around text
     position        = "top",                    -- top, bottom
-    separator       = true,                     -- might look together with gaps
+    separator       = true,                     -- might look bad with gaps
     separator_color = 0x2d95efff,
     separator_width = 1,                        -- pixels
 
