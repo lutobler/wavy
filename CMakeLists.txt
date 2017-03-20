@@ -8,18 +8,19 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_EXTENSIONS OFF)
 add_definitions(-D_GNU_SOURCE)
 
-# TODO: This works on Arch Linux. Make this work on any system.
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+add_subdirectory(protocols)
+
+find_package(Cairo REQUIRED)
+find_package(Pango REQUIRED)
+
 include_directories(
     include
     protocols
-    /usr/include/cairo
-    /usr/include/pango-1.0
-    /usr/include/glib-2.0
-    /usr/lib/glib-2.0/include
+    ${CAIRO_INCLUDE_DIRS}
+    ${PANGO_INCLUDE_DIRS}
+    ${GLIB_LIBRARIES}
 )
-
-list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
-add_subdirectory(protocols)
 
 add_executable(wavy
     src/bar.c
