@@ -19,7 +19,6 @@ include_directories(
     protocols
     ${CAIRO_INCLUDE_DIRS}
     ${PANGO_INCLUDE_DIRS}
-    ${GLIB_LIBRARIES}
 )
 
 add_executable(wavy
