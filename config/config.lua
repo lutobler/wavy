@@ -139,7 +139,7 @@ keys = {
     {"new_frame",    {modkey}, "p", "right"},
     {"new_frame",    {modkey}, "o", "down"},
     {"delete_frame", {modkey}, "r"},
-    {"resize",       {"alt"},  "h", "left",  0.05}, -- number in percent
+    {"resize",       {"alt"},  "h", "left",  0.05},
     {"resize",       {"alt"},  "j", "down",  0.05},
     {"resize",       {"alt"},  "k", "up",    0.05},
     {"resize",       {"alt"},  "l", "right", 0.05},
