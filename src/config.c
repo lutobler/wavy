@@ -603,8 +603,6 @@ void init_config() {
         luaL_error(L_config, "Runtime error");
     }
 
-    /* lua_settop(L_config, 1); */
-
     default_config();
     read_config(L_config);
     bar_config(L_config);
