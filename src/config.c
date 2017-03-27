@@ -63,7 +63,7 @@ static void default_config() {
     config->num_layouts = 5;
 }
 
-static void check_argc(lua_State *L, uint32_t argc_expected, uint32_t argc,
+static void check_argc(lua_State *L, uint32_t argc, uint32_t argc_expected,
         const char *func_name) {
 
     if (argc_expected != argc) {
@@ -488,26 +488,26 @@ static void read_config(lua_State *L) {
         return;
     }
 
-    set_conf_int(L, "frame_gaps_size", &config->frame_gaps_size, 1);
-    set_conf_int(L, "frame_border_size", &config->frame_border_size, 1);
+    set_conf_int(L, "frame_gaps_size", &config->frame_gaps_size, -1);
+    set_conf_int(L, "frame_border_size", &config->frame_border_size, -1);
     set_conf_int(L, "frame_border_empty_size",
-            &config->frame_border_empty_size, 1);
+            &config->frame_border_empty_size, -1);
     set_conf_int(L, "frame_border_active_color",
-            &config->frame_border_active_color, 1);
+            &config->frame_border_active_color, -1);
     set_conf_int(L, "frame_border_inactive_color",
-            &config->frame_border_inactive_color, 1);
+            &config->frame_border_inactive_color, -1);
     set_conf_int(L, "frame_border_empty_active_color",
-            &config->frame_border_empty_active_color, 1);
+            &config->frame_border_empty_active_color, -1);
     set_conf_int(L, "frame_border_empty_inactive_color",
-            &config->frame_border_empty_inactive_color, 1);
+            &config->frame_border_empty_inactive_color, -1);
 
-    set_conf_int(L, "view_border_size", &config->view_border_size, 1);
+    set_conf_int(L, "view_border_size", &config->view_border_size, -1);
     set_conf_int(L, "view_border_active_color",
-            &config->view_border_active_color, 1);
+            &config->view_border_active_color, -1);
     set_conf_int(L, "view_border_inactive_color",
-            &config->view_border_inactive_color, 1);
+            &config->view_border_inactive_color, -1);
 
-    set_conf_str(L, "wallpaper", &config->wallpaper, 1);
+    set_conf_str(L, "wallpaper", &config->wallpaper, -1);
 
     // expand file path
     wordexp_t f;
@@ -545,6 +545,18 @@ static char *get_config_file_path() {
     return c_file;
 }
 
+// function to be called when an error in lua_pcall occurs
+static int msghandler(lua_State *L) {
+    const char *msg = lua_tostring(L, -1);
+    if (!msg) {
+        return 1;
+    }
+    luaL_traceback(L, L, msg, 1);
+    const char *trace = lua_tostring(L, -1);
+    lua_writestringerror("%s\n", trace);
+    return 1;
+}
+
 void init_config() {
     config = calloc(1, sizeof(struct wavy_config_t));
     if (!config) {
@@ -568,16 +580,30 @@ void init_config() {
         if (err_load == LUA_ERRFILE) {
             wavy_log(LOG_ERROR, "Error loading config.lua");
         } else if (err_load == LUA_ERRSYNTAX) {
-            wavy_log(LOG_ERROR, "Syntax error in config.lua");
+            const char *msg = lua_tostring(L_config, -1);
+            if (msg) {
+                wavy_log(LOG_ERROR, "%s", msg);
+            } else {
+                wavy_log(LOG_ERROR, "Syntax error in config.lua");
+            }
         }
         exit(EXIT_FAILURE);
     }
 
+    // push a msghandler on the stack which prints a stacktrace when
+    // lua_pcall fails
+    int32_t base = lua_gettop(L_config);
+    lua_pushcfunction(L_config, msghandler);
+    lua_insert(L_config, base);
+
     // execute the script and initialize its global variables
-    int32_t err = lua_pcall(L_config, 0, 0, 0);
-    if (err == LUA_ERRRUN) {
+    int32_t status = lua_pcall(L_config, 0, 0, base);
+
+    if (status != LUA_OK) {
         luaL_error(L_config, "Runtime error");
     }
+
+    /* lua_settop(L_config, 1); */
 
     default_config();
     read_config(L_config);
