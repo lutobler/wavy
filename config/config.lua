@@ -1,7 +1,11 @@
-package.path = os.getenv("HOME") .. "/.config/wavy/?.lua;" .. package.path
-package.path = os.getenv("HOME") .. "/wavy/config/?.lua;" .. package.path
-package.path = os.getenv("HOME") .. "./config/?.lua;" .. package.path
-package.cpath = os.getenv("HOME") .. "/wavy/?.so;" .. package.cpath
+-- look for files in $XDG_CONFIG_DIR, and if unset, fall back to ~/.config
+xdg_config_dir = os.getenv("XDG_CONFIG_DIR")
+if xdg_config_dir then
+    package.path = xdg_config_dir .. "/wavy/?.lua;" .. package.path
+else
+    package.path = os.getenv("HOME") .. "/.config/wavy/?.lua;" .. package.path
+end
+
 wavy = require("wavy_utils")
 
 -- [[ WAVY CONFIGURATION ]] --
