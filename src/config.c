@@ -177,7 +177,6 @@ static uint32_t get_num(lua_State *L, int32_t idx_table, int32_t idx) {
     return n;
 }
 
-// TODO
 // idx: positive index of subtable of 'keys' table
 static void keybind_string_filter(lua_State *L, int32_t idx) {
     uint32_t argc = lua_rawlen(L, idx);
