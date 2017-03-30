@@ -109,16 +109,13 @@ function wavy.widgets.callbacks.volume()
     return {bg, fg, str}
 end
 
--- battery status. the path might be different (BAT0, BAT1, etc.)
-function wavy.widgets.callbacks.battery()
-    local f_cap = io.open("/sys/class/power_supply/BAT1/capacity", "r")
-    local f_stat = io.open("/sys/class/power_supply/BAT1/status", "r")
-    if f_cap and f_stat then
+-- arg: battery := BAT0, BAT1, etc.
+function wavy.widgets.callbacks.battery(battery)
+    local f_cap = io.open("/sys/class/power_supply/" .. battery .. "/capacity", "r")
+    if f_cap then
         local bat_cap = f_cap:read()
-        local bat_stat = f_stat:read()
         f_cap:close()
-        f_stat:close()
-        local str = "Battery: " .. bat_cap .. "% (" .. bat_stat .. ")"
+        local str = battery .. ": " .. bat_cap .. "%"
         return {bg, fg, str}
     else
         if f_cap then
@@ -204,12 +201,6 @@ wavy.widgets.default.volume = {
     wavy.alignment.right,
     wavy.hooks.user,
     wavy.widgets.callbacks.volume
-}
-
-wavy.widgets.default.battery = {
-    wavy.alignment.right,
-    wavy.hooks.periodic_slow,
-    wavy.widgets.callbacks.battery
 }
 
 wavy.widgets.default.view_title = {
