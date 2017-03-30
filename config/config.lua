@@ -6,6 +6,9 @@ else
     package.path = os.getenv("HOME") .. "/.config/wavy/?.lua;" .. package.path
 end
 
+-- for running the binary from the git directory
+package.path = "./config/?.lua;" .. package.path
+
 wavy = require("wavy_utils")
 
 -- [[ WAVY CONFIGURATION ]] --
