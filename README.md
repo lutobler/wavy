@@ -48,5 +48,5 @@ point.
 - [ ] Fix build system
 - [ ] Frame gaps
 - [ ] Documentation
-- [ ] Complete wallaper support
+- [ ] Complete wallpaper support
 - [x] Input configuration
